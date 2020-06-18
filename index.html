@@ -1,34 +1,29 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Replace with your title</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css" rel="stylesheet" />
-    <script src='https://d3js.org/d3.v4.min.js'></script>
-    <link rel="stylesheet" href="style.css">
-
-  </head>
+<head>
+  <meta charset='utf-8' />
+  <title></title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v1.9.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v1.9.1/mapbox-gl.css" rel="stylesheet" />
+  <script src='https://npmcdn.com/csv2geojson@latest/csv2geojson.js'></script>
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
   <style>
     body {
-      background: #404040;
       margin: 0;
       padding: 0;
     }
 
-
     #map {
-      border-left: 1px solid #fff;
       position: absolute;
-      width: 100%;
       top: 0;
       bottom: 0;
+      width: 100%;
     }
 
+    /* Popup styling */
 
     .mapboxgl-popup {
       padding-bottom: 5px;
@@ -77,70 +72,117 @@
     .mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
       border-bottom-color: rgb(61, 59, 59);
     }
-
   </style>
+</head>
 
-  <body>
+<body>
 
-    <div id="map"></div>
-    <script>
-      var transformRequest = (url, resourceType) => {
-        var isMapboxRequest =
-          url.slice(8, 22) === "api.mapbox.com" ||
-          url.slice(10, 26) === "tiles.mapbox.com";
-        return {
-          url: isMapboxRequest
-            ? url.replace("?", "?pluginName=sheetMapper&")
-            : url
-        };
+  <div id='map'></div>
+  <script>
+
+    var transformRequest = (url, resourceType) => {
+      var isMapboxRequest =
+        url.slice(8, 22) === "api.mapbox.com" ||
+        url.slice(10, 26) === "tiles.mapbox.com";
+      return {
+        url: isMapboxRequest
+          ? url.replace("?", "?pluginName=sheetMapper&")
+          : url
       };
+    };
+    //YOUR TURN: add your Mapbox token 
+    mapboxgl.accessToken = 'pk.eyJ1IjoidHdvbmluYyIsImEiOiJja2Jrd3R3Y3owYmU1MnBtZWJpamYzM25kIn0.Ux4w99PgqsjbjYaPZstK3A'; //Mapbox token 
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/twoninc/ckbkwx8sc0m3g1imu2wlu90ue', //stylesheet location
+      center: [-73.9716, 40.6992], // starting position
+      zoom: 9,// starting zoom
+      transformRequest: transformRequest
+    });
 
-      //YOUR TURN: add your Mapbox access token 
-      mapboxgl.accessToken = 'pk.eyJ1IjoidHdvbmluYyIsImEiOiJja2Jrd3R3Y3owYmU1MnBtZWJpamYzM25kIn0.Ux4w99PgqsjbjYaPZstK3A';
-      var map = new mapboxgl.Map({
-        container: 'map', // container id
-        style: "<Replace with a Mapbox style url>", //YOUR TURN: choose a style: https://docs.mapbox.com/api/maps/#styles
-        center: [-122.411464, 37.7852299], // starting position [lng, lat]
-        zoom: 9, // starting zoom
-        transformRequest: transformRequest
+    $(document).ready(function () {
+      $.ajax({
+        type: "GET",
+        //YOUR TURN: Replace with csv export link
+        url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLYxlWp1q0q56XHpau48BiX7xag6DKtIQ-CyK6nWF9Dol07XaG4uoMPp5TpPNy-dzXjhJBw9CewVnj/pub?gid=0&single=true&output=csv',
+        dataType: "text",
+        success: function (csvData) { makeGeoJSON(csvData); }
       });
 
 
-      map.on("load", function() {
-        init();
-      });
 
-      // Initialize D3 to access your table
-      function init() {
-        d3.csv('<Link to your shared spreadsheet goes here!>', addPoints);
-      }
+      function makeGeoJSON(csvData) {
+        csv2geojson.csv2geojson(csvData, {
+          latfield: 'Latitude',
+          lonfield: 'Longitude',
+          delimiter: ','
+        }, function (err, data) {
+          map.on('load', function () {
+
+            //Add the the layer to the map 
+            map.addLayer({
+              'id': 'csvData',
+              'type': 'circle',
+              'source': {
+                'type': 'geojson',
+                'data': data
+              },
+              'paint': {
+                'circle-radius': 5,
+                'circle-color': "purple"
+              }
+            });
 
 
-      // create a function called addPoints that iterates through your table (row by row) to create markers and popups
-      function addPoints(data) {
+            // When a click event occurs on a feature in the csvData layer, open a popup at the
+            // location of the feature, with description HTML from its properties.
+            map.on('click', 'csvData', function (e) {
+              var coordinates = e.features[0].geometry.coordinates.slice();
 
-        // iterate through your table to set the marker to lat/long values for each row
+              //set popup text 
+              //You can adjust the values of the popup to match the headers of your CSV. 
+              // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV. 
+              var description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + `Information: ` + `</b>` + e.features[0].properties.Information + `</h4>`;
 
-        data.forEach(function(row) {
+              // Ensure that if the map is zoomed out such that multiple
+              // copies of the feature are visible, the popup appears
+              // over the copy being pointed to.
+              while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+              }
 
-          // create a variable for your popup and populate your popup with information from your table
-          var popup = new mapboxgl.Popup()
-            .setHTML(`<h3>` + row.Name + `</h3>` + '<h4>' + '<b>' + 'Address: ' + '</b>' + row.Address + '</h4>' + '<h4>' + '<b>' + 'Phone: ' + '</b>' + row.Phone + '</h4>'); // use the table to populate your popup with text
+              //add Popup to map
 
+              new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(description)
+                .addTo(map);
+            });
 
-          // create a variable for your markup and add it to the map 
-          var marker = new mapboxgl.Marker({
-              color: 'purple'
-            })
-            .setLngLat([row.Longitude, row.Latitude])
-            .setPopup(popup)
-            .addTo(map); // add the marker to the map
+            // Change the cursor to a pointer when the mouse is over the places layer.
+            map.on('mouseenter', 'csvData', function () {
+              map.getCanvas().style.cursor = 'pointer';
+            });
 
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'places', function () {
+              map.getCanvas().style.cursor = '';
+            });
+
+            var bbox = turf.bbox(data);
+            map.fitBounds(bbox, { padding: 50 });
+
+          });
 
         });
-      }
+      };
+    });
 
-    </script>
-  </body>
+
+
+
+  </script>
+
+</body>
 
 </html>
