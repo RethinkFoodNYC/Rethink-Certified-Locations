@@ -2,6 +2,8 @@ import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import { KEYS as K } from '../../globals/constants';
 
+import './style.scss';
+
 // Layers Names
 const L = {
   CSV_DATA: 'csvData',
