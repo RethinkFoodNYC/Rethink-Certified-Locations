@@ -173,9 +173,11 @@
         }
     };
 };
+console.log("data", data)
+console.log("data.features", data.features[0].geometry.coordinates)
 
  //Add radius to one point
-       map.addSource("polygon", createGeoJSONCircle([-73.9716, 40.6992], 1)); // (center coordinates [x,y], radius in km)
+       map.addSource("polygon", createGeoJSONCircle(data.features[1].geometry.coordinates, 1)); // (center coordinates [x,y], radius in km)
 
             map.addLayer({
                 "id": "polygon",
