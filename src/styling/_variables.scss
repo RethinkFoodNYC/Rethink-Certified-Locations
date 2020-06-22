@@ -1,0 +1,19 @@
+/** TYPOGRAPHY */
+$fontRegular: "sans-serif";
+// $fontBold:;
+// $fontExtraBold:;
+// $fontLight:;
+// $fontMediumCondensed:;
+
+$GOLDEN_RATIO: 1.618;
+$fontSizeBase: 16px;
+$fontSizeLarge: $GOLDEN_RATIO * $fontSizeBase;
+$fontSizeSmall: $fontSizeBase / $GOLDEN_RATIO;
+$fontSizeXSmall: $fontSizeSmall / $GOLDEN_RATIO;
+$fontSizeXXSmall: $fontSizeXSmall / $GOLDEN_RATIO;
+
+
+/** COLORS */
+$colorBackground: #eee;
+
+/** SPACING */
