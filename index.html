@@ -176,19 +176,23 @@
 console.log("data", data)
 console.log("data.features", data.features[0].geometry.coordinates)
 
- //Add radius to one point
-       map.addSource("polygon", createGeoJSONCircle(data.features[1].geometry.coordinates, 1)); // (center coordinates [x,y], radius in km)
 
+ //Add radius to one point
+ var i;
+ for (i=0; i < data.features.length; i++) { // "polygon" must update to "polygon1", "polygon2"
+       map.addSource("polygon"+i, createGeoJSONCircle(data.features[i].geometry.coordinates, 1)); // (center coordinates, radius in km)
             map.addLayer({
-                "id": "polygon",
+                "id": "polygon"+i,
                 "type": "fill",
-                "source": "polygon",
+                "source": "polygon"+i,
                 "layout": {},
                 "paint": {
                     "fill-color": "blue",
                     "fill-opacity": 0.6
                 }
             });
+            console.log("polygon"+i);
+          };
 
 
             // When a click event occurs on a feature in the csvData layer, open a popup at the
