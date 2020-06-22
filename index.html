@@ -80,8 +80,8 @@
   <div id='map'></div>
   <script>
 
-    var transformRequest = (url, resourceType) => {
-      var isMapboxRequest =
+    const transformRequest = (url, resourceType) => {
+      const isMapboxRequest =
         url.slice(8, 22) === "api.mapbox.com" ||
         url.slice(10, 26) === "tiles.mapbox.com";
       return {
@@ -92,10 +92,10 @@
     };
     //YOUR TURN: add your Mapbox token 
     mapboxgl.accessToken = 'pk.eyJ1IjoidHdvbmluYyIsImEiOiJja2Jrd3R3Y3owYmU1MnBtZWJpamYzM25kIn0.Ux4w99PgqsjbjYaPZstK3A'; //Mapbox token 
-    var map = new mapboxgl.Map({
+    const map = new mapboxgl.Map({
       container: 'map', // container id
       style: 'mapbox://styles/twoninc/ckbkwx8sc0m3g1imu2wlu90ue', //stylesheet location
-      center: [-73.9716, 40.6992], // starting position
+      center: [-73.9716, 40.6992], // starting position, Brookyln Navy Yard
       zoom: 9,// starting zoom
       transformRequest: transformRequest
     });
@@ -109,21 +109,45 @@
         success: function (csvData) { makeGeoJSON(csvData); }
       });
 
-      
-//start radius code //
-      var createGeoJSONCircle = function(center, radiusInKm, points) {
-    if(!points) points = 64;
+    
+      function makeGeoJSON(csvData) {
+        csv2geojson.csv2geojson(csvData, {
+          latfield: 'Latitude',
+          lonfield: 'Longitude',
+          delimiter: ','
+        }, function (err, data) {
+          map.on('load', function () {
 
-    var coords = {
+            //Add the the layer to the map 
+            map.addLayer({
+              'id': 'csvData',
+              'type': 'circle',
+              'source': {
+                'type': 'geojson',
+                'data': data
+              },
+              'paint': {
+                'circle-radius': 5,
+                'circle-color': "purple"
+              }
+            });
+
+      
+//start radius code 
+// TODO: make createGeoJSONCircle iterate through the list of lat longs to fill in center for each point
+      const createGeoJSONCircle = function(center, radiusInKm, points) {
+    if(!points) points = 64; // automatically makes a 64-sided polygon, looks like a circle on the map
+
+    const coords = {
         latitude: center[1],
         longitude: center[0]
     };
 
-    var km = radiusInKm;
+    const km = radiusInKm;
 
-    var ret = [];
-    var distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
-    var distanceY = km/110.574;
+    const ret = [];
+    const distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
+    const distanceY = km/110.574;
 
     var theta, x, y;
     for(var i=0; i<points; i++) {
@@ -150,31 +174,8 @@
     };
 };
 
-//end radius code//
-
-      function makeGeoJSON(csvData) {
-        csv2geojson.csv2geojson(csvData, {
-          latfield: 'Latitude',
-          lonfield: 'Longitude',
-          delimiter: ','
-        }, function (err, data) {
-          map.on('load', function () {
-
-            //Add the the layer to the map 
-            map.addLayer({
-              'id': 'csvData',
-              'type': 'circle',
-              'source': {
-                'type': 'geojson',
-                'data': data
-              },
-              'paint': {
-                'circle-radius': 5,
-                'circle-color': "purple"
-              }
-            });
-
-            map.addSource("polygon", createGeoJSONCircle([-73.9716, 40.6992], 0.5));
+ //Add radius to one point
+       map.addSource("polygon", createGeoJSONCircle([-73.9716, 40.6992], 1)); // (center coordinates [x,y], radius in km)
 
             map.addLayer({
                 "id": "polygon",
@@ -191,12 +192,12 @@
             // When a click event occurs on a feature in the csvData layer, open a popup at the
             // location of the feature, with description HTML from its properties.
             map.on('click', 'csvData', function (e) {
-              var coordinates = e.features[0].geometry.coordinates.slice();
+              const coordinates = e.features[0].geometry.coordinates.slice();
 
               //set popup text 
               //You can adjust the values of the popup to match the headers of your CSV. 
               // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV. 
-              var description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + `Information: ` + `</b>` + e.features[0].properties.Information + `</h4>`;
+              const description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + `Information: ` + `</b>` + e.features[0].properties.Information + `</h4>`;
 
               // Ensure that if the map is zoomed out such that multiple
               // copies of the feature are visible, the popup appears
@@ -223,7 +224,7 @@
               map.getCanvas().style.cursor = '';
             });
 
-            var bbox = turf.bbox(data);
+            const bbox = turf.bbox(data);
             map.fitBounds(bbox, { padding: 50 });
 
           });
