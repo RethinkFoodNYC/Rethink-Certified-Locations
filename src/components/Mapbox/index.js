@@ -1,6 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import { KEYS as K } from '../../globals/constants';
+import turf from 'turf';
 
 import './style.scss';
 
@@ -9,6 +10,8 @@ const L = {
   CSV_DATA: 'csvData',
   BUFFER: 'buffer',
 };
+
+const UNIT = 'miles';
 
 export default class Mapbox {
   constructor(geojsonData) {
@@ -22,12 +25,13 @@ export default class Mapbox {
       container: 'map', // container id
       style: 'mapbox://styles/twoninc/ckbkwx8sc0m3g1imu2wlu90ue', // stylesheet location
       center: [-73.9716, 40.6992], // starting position, Brookyln Navy Yard
-      zoom: 9, // starting zoom
+      zoom: 10, // starting zoom
     });
 
     this.map.on('load', () => {
-      this.formatCsvData();
-      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e));
+      this.formatCsvData(); //formats csv data and loads as a layer of points
+      this.addBuffer(); //initializes data source and buffer layer scaffolding
+      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); //sets up on click listener to csv_data layer
     });
   }
 
@@ -38,30 +42,40 @@ export default class Mapbox {
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
-      this.addLayer(L.CSV_DATA, geojsonData);
+      this.map.addLayer({
+        id: L.CSV_DATA,
+        type: 'circle',
+        source: {
+          type: 'geojson',
+          data: geojsonData,
+        },
+        paint: {
+          'circle-radius': 5,
+          'circle-color': 'purple',
+        },
+      });
     });
   }
 
-  /**
-   * given layer id and geojson data as an argument,
-   * adds a layer to the map
-   * */
-  addLayer(id, geojsonData) {
+  addBuffer() {
+    this.map.addSource(L.BUFFER, { type: 'geojson', data: { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": {} } })
     this.map.addLayer({
-      id,
-      type: 'circle',
-      source: {
-        type: 'geojson',
-        data: geojsonData,
-      },
+      id: 'buffer',
+      type: 'fill',
+      source: L.BUFFER,
       paint: {
-        'circle-radius': 5,
-        'circle-color': 'purple',
+        'fill-color': 'red',
+        'fill-opacity': 0.75,
       },
     });
   }
+
 
   handleClick(e) {
-    console.log('e.features', e.features);
+    const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+    const buffered = turf.buffer(point, 3, UNIT);
+    this.map.getSource(L.BUFFER).setData(buffered); //pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
   }
+
+
 }
