@@ -1,5 +1,6 @@
 import { csv } from 'd3';
 import Mapbox from './Mapbox/index';
+import GoogleAuth from './GoogleAuth';
 // import list
 
 // pull data
@@ -8,6 +9,7 @@ const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLYxl
 // initialize both components with data
 export default class App {
   init() {
+    this.googleAuth = new GoogleAuth();
     this.fetchCsvData().then((data) => {
       this.map = new Mapbox(data);
     });
