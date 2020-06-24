@@ -41,13 +41,15 @@ export default class Mapbox {
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
+      this.map.addSource(L.CSV_DATA, {
+        type: 'geojson',
+        data: geojsonData,
+      });
+
       this.map.addLayer({
         id: L.CSV_DATA,
         type: 'circle',
-        source: {
-          type: 'geojson',
-          data: geojsonData,
-        },
+        source: L.CSV_DATA,
         paint: {
           'circle-radius': 5,
           'circle-color': 'purple',
@@ -59,6 +61,7 @@ export default class Mapbox {
   /** Gets called externally from app once a user has logged out */
   removeData() {
     if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA);
+    if (this.map.getSource(L.CSV_DATA)) this.map.removeSource(L.CSV_DATA);
   }
 
   addBuffer() {

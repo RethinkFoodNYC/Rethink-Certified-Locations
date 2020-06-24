@@ -4,7 +4,7 @@ import './style.scss';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
 const CLIENT_ID = '717930834965-anlolbsq30inesinii2ob36avcm8qlv7.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyBnMVnXtyiGd_Qb17O3qOJRowsq-NnfJ_I';
+const API_KEY = 'AIzaSyBnMVnXtyiGd_Qb17O3qOJRowsq-NnfJ_I'; // TODO: add restriction on key
 const SPREADSHEET_ID = '1fdDLW_On7psHv5xKXdqHabggAGR7WTFuepPG8EHBJTs';
 const SHEET_NAME = 'staging';
 
