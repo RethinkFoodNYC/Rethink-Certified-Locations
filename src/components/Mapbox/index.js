@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
-import { KEYS as K } from '../../globals/constants';
 import turf from 'turf';
+import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
 
@@ -29,15 +29,14 @@ export default class Mapbox {
     });
 
     this.map.on('load', () => {
-      this.formatCsvData(); //formats csv data and loads as a layer of points
-      this.addBuffer(); //initializes data source and buffer layer scaffolding
-      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); //sets up on click listener to csv_data layer
+      this.addBuffer(); // initializes data source and buffer layer scaffolding
+      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layer
     });
   }
 
-  /**  */
-  formatCsvData() {
-    csv2geojson.csv2geojson(this.data, {
+  /** Gets called externally from app once a user has logged in */
+  addData(data) {
+    csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
@@ -57,8 +56,13 @@ export default class Mapbox {
     });
   }
 
+  /** Gets called externally from app once a user has logged out */
+  removeData() {
+    if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA);
+  }
+
   addBuffer() {
-    this.map.addSource(L.BUFFER, { type: 'geojson', data: { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": {} } })
+    this.map.addSource(L.BUFFER, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } });
     this.map.addLayer({
       id: 'buffer',
       type: 'fill',
@@ -70,12 +74,9 @@ export default class Mapbox {
     });
   }
 
-
   handleClick(e) {
     const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
     const buffered = turf.buffer(point, 3, UNIT);
-    this.map.getSource(L.BUFFER).setData(buffered); //pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
   }
-
-
 }

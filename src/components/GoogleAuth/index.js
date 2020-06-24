@@ -14,7 +14,9 @@ const DISCOVERY_DOCS = ['https://sheets.googleapis.com/$discovery/rest?version=v
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
 export default class GoogleAuth {
-  constructor() {
+  constructor(onReceiveData, onSignOut) {
+    this.onReceiveData = onReceiveData;
+    this.onSignOut = onSignOut;
     this.handleAuthClick = this.handleAuthClick.bind(this);
     this.handleSignoutClick = this.handleSignoutClick.bind(this);
     this.initClient = this.initClient.bind(this);
@@ -65,13 +67,10 @@ export default class GoogleAuth {
   updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
       console.log('signed In');
-      // authorizeButton.style.display = 'none';
-      // signoutButton.style.display = 'block';
       this.pullData();
     } else {
       console.log('signed out');
-      // authorizeButton.style.display = 'block';
-      // signoutButton.style.display = 'none';
+      this.onSignOut();
     }
   }
 
@@ -95,7 +94,16 @@ export default class GoogleAuth {
       spreadsheetId: SPREADSHEET_ID,
       range: SHEET_NAME,
     }).then((response) => {
-      console.log('response', response);
+      // first element is column names
+      const [cols, ...rows] = response.result.values;
+      const parsed = rows.reduce((acc, row) => ([...acc,
+        row.reduce((obj, val, i) => ({
+          ...obj,
+          [cols[i]]: val,
+        }),
+        {})]),
+      []);
+      this.onReceiveData(parsed);
     });
   }
 }
