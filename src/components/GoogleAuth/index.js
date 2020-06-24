@@ -5,8 +5,9 @@ import './style.scss';
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
 const CLIENT_ID = '717930834965-anlolbsq30inesinii2ob36avcm8qlv7.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyBnMVnXtyiGd_Qb17O3qOJRowsq-NnfJ_I'; // TODO: add restriction on key
-const SPREADSHEET_ID = '1fdDLW_On7psHv5xKXdqHabggAGR7WTFuepPG8EHBJTs';
-const SHEET_NAME = 'staging';
+// TODO: pull these out to configuration file
+const SPREADSHEET_ID = '1dXv2dysONvOCDPvrgrulEBRaNLGUqj8NOUX29r62SWI';
+const SHEET_NAME = 'Sheet1';
 
 const DISCOVERY_DOCS = ['https://sheets.googleapis.com/$discovery/rest?version=v4'];
 // Authorization scopes required by the API; multiple scopes can be
@@ -90,6 +91,7 @@ export default class GoogleAuth {
 
   pullData() {
     console.log('pullingData');
+    // TODO: generalize this to be able to handle multiple sheets if needed
     gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: SHEET_NAME,
