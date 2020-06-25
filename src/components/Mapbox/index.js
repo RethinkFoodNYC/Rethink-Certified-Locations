@@ -64,8 +64,8 @@ export default class Mapbox {
       type: 'fill',
       source: L.BUFFER,
       paint: {
-        'fill-color': 'red',
-        'fill-opacity': 0.75,
+        'fill-color': 'blue',
+        'fill-opacity': 0.5,
       },
     });
   }
@@ -75,6 +75,16 @@ export default class Mapbox {
     const buffered = buffer(point, 1, { units: 'miles' });
     this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
     // based on the buffered data generated on click
+
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const description = `<h3>${e.features[0].properties.Name}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties.Address}</h4>` + '<h4>' + '<b>' + 'Information: ' + `</b>${e.features[0].properties.Information}</h4>`;
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+    new mapboxgl.Popup()
+      .setLngLat(coordinates)
+      .setHTML(description)
+      .addTo(this.map);
   }
 
   fitBounds(geojsonData) {
