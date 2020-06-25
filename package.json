@@ -1,7 +1,6 @@
 {
   "name": "rethink-map",
   "version": "1.0.0",
-  "main": "index.js",
   "repository": "https://github.com/two-n/rethink-map.git",
   "author": "auchers <aucher@two-n.com>",
   "license": "MIT",
@@ -13,11 +12,9 @@
     "sass": "^1.26.8"
   },
   "scripts": {
-    "dev": "parcel index.html",
-    "prebuild": "rm -rf dist",
-    "build": "parcel build index.html",
-    "prototypes-build": "yarn prebuild && parcel build index.html --public-url http://prototypes.two-n.com/[PATH_TO_PROJECT]",
-    "deploy": "rsync -avz --delete ./dist/ twoninc@two-n.com:/home/twoninc/prototypes.two-n.com/[PATH_TO_PROJECT]"
+    "dev": "parcel index.html --dist-dir docs",
+    "prebuild": "rm -rf docs",
+    "build": "parcel build index.html --dist-dir docs"
   },
   "dependencies": {
     "@turf/buffer": "^5.1.5",
