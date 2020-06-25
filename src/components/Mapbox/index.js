@@ -2,6 +2,7 @@ import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import { KEYS as K } from '../../globals/constants';
 import turf from 'turf';
+import buffer from '@turf/buffer';
 
 import './style.scss';
 
@@ -12,10 +13,11 @@ const L = {
 };
 
 const UNIT = 'miles';
+var options = { steps: 10, units: 'kilometers', properties: { foo: 'bar' } };
 
 export default class Mapbox {
-  constructor(geojsonData) {
-    this.data = geojsonData;
+  constructor(csvData) {
+    this.data = csvData;
     this.initializeMap();
   }
 
@@ -54,6 +56,7 @@ export default class Mapbox {
           'circle-color': 'purple',
         },
       });
+      this.fitBounds(geojsonData);
     });
   }
 
@@ -73,8 +76,15 @@ export default class Mapbox {
 
   handleClick(e) {
     const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
-    const buffered = turf.buffer(point, 3, UNIT);
+    const buffered = buffer(point, 1, { units: 'miles' });
+    console.log("buffer", buffered)
     this.map.getSource(L.BUFFER).setData(buffered); //pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+  }
+
+
+  fitBounds(geojsonData) {
+    const bbox = turf.bbox(geojsonData);
+    this.map.fitBounds(bbox, { padding: 50 });
   }
 
 
