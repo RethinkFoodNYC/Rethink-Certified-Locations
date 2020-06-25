@@ -1,19 +1,27 @@
-import { csv } from 'd3';
 import Mapbox from './Mapbox/index';
+import GoogleAuth from './GoogleAuth';
 // import list
-
-// pull data
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLYxlWp1q0q56XHpau48BiX7xag6DKtIQ-CyK6nWF9Dol07XaG4uoMPp5TpPNy-dzXjhJBw9CewVnj/pub?gid=0&single=true&output=csv';
 
 // initialize both components with data
 export default class App {
   init() {
-    this.fetchCsvData().then((data) => {
-      this.map = new Mapbox(data);
-    });
+    this.passDataToMap = this.passDataToMap.bind(this);
+    this.removeDataFromMap = this.removeDataFromMap.bind(this);
+
+    // sets up google authentication client
+    // once a user logs in, automatically fetches data
+    // once data is fetched, it passes it into the callback to initialize map
+    this.googleAuth = new GoogleAuth(this.passDataToMap, this.removeDataFromMap);
+    this.map = new Mapbox();
   }
 
-  fetchCsvData() {
-    return csv(GOOGLE_SHEET_URL);
+  // gets called once user has logged in
+  passDataToMap(data) {
+    this.map.addData(data);
+  }
+
+  // gets called when a user signs out of app
+  removeDataFromMap() {
+    this.map.removeData();
   }
 }

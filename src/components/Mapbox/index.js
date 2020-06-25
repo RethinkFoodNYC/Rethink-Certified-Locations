@@ -28,26 +28,27 @@ export default class Mapbox {
     });
 
     this.map.on('load', () => {
-      this.formatCsvData(); // formats csv data and loads as a layer of points
       this.addBuffer(); // initializes data source and buffer layer scaffolding
       this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layer
     });
   }
 
-  /**  */
-  formatCsvData() {
-    csv2geojson.csv2geojson(this.data, {
+  /** Gets called externally from app once a user has logged in */
+  addData(data) {
+    csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
+      this.map.addSource(L.CSV_DATA, {
+        type: 'geojson',
+        data: geojsonData,
+      });
+
       this.map.addLayer({
         id: L.CSV_DATA,
         type: 'circle',
-        source: {
-          type: 'geojson',
-          data: geojsonData,
-        },
+        source: L.CSV_DATA,
         paint: {
           'circle-radius': 5,
           'circle-color': 'purple',
@@ -55,6 +56,12 @@ export default class Mapbox {
       });
       this.fitBounds(geojsonData);
     });
+  }
+
+  /** Gets called externally from app once a user has logged out */
+  removeData() {
+    if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA);
+    if (this.map.getSource(L.CSV_DATA)) this.map.removeSource(L.CSV_DATA);
   }
 
   addBuffer() {

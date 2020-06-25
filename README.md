@@ -11,3 +11,14 @@ builds static, compiled filed in `dist` folder. Use `prototypes-build` when buil
 
 ### `yarn deploy`
 to deploy to two-n prototypes site (you will need to add **base URL** this the `package.json` `scripts` first).
+
+---
+# TOKEN MANAGEMENT
+
+In order to deploy the app, we need to enable all the tokens to work from the site domain.
+Tokens that need to be updated include:
+
+1. Mapbox: API Token
+
+2. Google API: API Token + OAuth Client ID
+[Google Developers Console](https://console.developers.google.com/) > 'Credentials'
