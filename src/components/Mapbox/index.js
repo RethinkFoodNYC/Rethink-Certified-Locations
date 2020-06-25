@@ -109,6 +109,13 @@ export default class Mapbox {
       .setLngLat(coordinates)
       .setHTML(description)
       .addTo(this.map);
+
+    this.map.flyTo({
+      center: coordinates,
+      zoom: 12,
+      speed: 0.25,
+    });
+    // console.log('coords', coordinates);
   }
 
   fitBounds(geojsonData) {
