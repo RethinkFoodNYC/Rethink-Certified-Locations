@@ -59,7 +59,15 @@ export default class Mapbox {
             7, // range max
           ],
           // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
-          'circle-color': 'purple',
+          'circle-color': [
+            'interpolate',
+            ['linear'],
+            ['to-number', ['get', 'Information']],
+            1, // domain min
+            '#feb24c', // range min
+            14, // domain max
+            '#bd0026', // range max
+          ],
         },
       });
       this.fitBounds(geojsonData);
