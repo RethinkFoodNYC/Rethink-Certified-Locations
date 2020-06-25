@@ -44,17 +44,26 @@ export default class Mapbox {
         type: 'geojson',
         data: geojsonData,
       });
-
       this.map.addLayer({
         id: L.CSV_DATA,
         type: 'circle',
         source: L.CSV_DATA,
         paint: {
-          'circle-radius': 5,
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['to-number', ['get', 'Information']],
+            1, // domain min
+            2, // range min
+            14, // domain max
+            7, // range max
+          ],
+          // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
           'circle-color': 'purple',
         },
       });
       this.fitBounds(geojsonData);
+      console.log('geojsonData', geojsonData);
     });
   }
 
