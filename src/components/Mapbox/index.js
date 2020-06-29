@@ -13,11 +13,8 @@ const L = {
   BUFFER: 'buffer',
 };
 
-// const [MIN, MAX] = extent(data, (d) => d[K.INFO]);
-
 export default class Mapbox {
-  constructor(csvData) {
-    this.data = csvData;
+  constructor() {
     this.initializeMap();
   }
 
@@ -38,9 +35,7 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // how would I define this further up? i.e. before `addData(data)` has been called?
-    console.log('min', MIN);
-    console.log('max', MAX);
+    const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // cannot define before `addData(data)` has been called
     csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
@@ -77,7 +72,6 @@ export default class Mapbox {
         },
       });
       this.fitBounds(geojsonData);
-      console.log('geojsonData', geojsonData);
     });
   }
 
