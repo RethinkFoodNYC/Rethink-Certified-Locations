@@ -2,6 +2,8 @@ import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import buffer from '@turf/buffer';
+// import extent from 'd3-array';
+import { min, max } from 'd3';
 import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
@@ -11,6 +13,8 @@ const L = {
   CSV_DATA: 'csvData',
   BUFFER: 'buffer',
 };
+
+// const [MIN, MAX] = extent(data, (d) => d[K.INFO]);
 
 export default class Mapbox {
   constructor(csvData) {
@@ -35,6 +39,11 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
+    const MIN = min(data, (d) => Number(d[K.INFO])); // how would I define this further up? i.e. before `addData(data)` has been called?
+    const MAX = max(data, (d) => Number(d[K.INFO]));
+    // const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // it doesn't like this one (I may have imported it wrong?), but min/max works
+    console.log('min', MIN);
+    console.log('max', MAX);
     csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
@@ -52,20 +61,20 @@ export default class Mapbox {
           'circle-radius': [
             'interpolate',
             ['linear'],
-            ['to-number', ['get', 'Information']],
-            1, // domain min
+            ['to-number', ['get', K.INFO]],
+            MIN, // domain min
             2, // range min
-            14, // domain max
+            MAX, // domain max
             7, // range max
           ],
           // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
           'circle-color': [
             'interpolate',
             ['linear'],
-            ['to-number', ['get', 'Information']],
-            1, // domain min
+            ['to-number', ['get', K.INFO]],
+            MIN, // domain min
             '#feb24c', // range min
-            14, // domain max
+            MAX, // domain max
             '#bd0026', // range max
           ],
         },
