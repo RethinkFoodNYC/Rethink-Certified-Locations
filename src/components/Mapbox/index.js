@@ -2,8 +2,7 @@ import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import buffer from '@turf/buffer';
-// import extent from 'd3-array';
-import { min, max } from 'd3';
+import { extent } from 'd3-array';
 import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
@@ -39,9 +38,7 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    const MIN = min(data, (d) => Number(d[K.INFO])); // how would I define this further up? i.e. before `addData(data)` has been called?
-    const MAX = max(data, (d) => Number(d[K.INFO]));
-    // const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // it doesn't like this one (I may have imported it wrong?), but min/max works
+    const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // how would I define this further up? i.e. before `addData(data)` has been called?
     console.log('min', MIN);
     console.log('max', MAX);
     csv2geojson.csv2geojson(data, {
