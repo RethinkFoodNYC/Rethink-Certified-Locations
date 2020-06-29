@@ -2,6 +2,7 @@ import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import buffer from '@turf/buffer';
+import { extent } from 'd3-array';
 import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
@@ -13,8 +14,7 @@ const L = {
 };
 
 export default class Mapbox {
-  constructor(csvData) {
-    this.data = csvData;
+  constructor() {
     this.initializeMap();
   }
 
@@ -35,6 +35,7 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
+    const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // cannot define before `addData(data)` has been called
     csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
@@ -44,14 +45,30 @@ export default class Mapbox {
         type: 'geojson',
         data: geojsonData,
       });
-
       this.map.addLayer({
         id: L.CSV_DATA,
         type: 'circle',
         source: L.CSV_DATA,
         paint: {
-          'circle-radius': 5,
-          'circle-color': 'purple',
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['to-number', ['get', K.INFO]],
+            MIN, // domain min
+            2, // range min
+            MAX, // domain max
+            7, // range max
+          ],
+          // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
+          'circle-color': [
+            'interpolate',
+            ['linear'],
+            ['to-number', ['get', K.INFO]],
+            MIN, // domain min
+            '#feb24c', // range min
+            MAX, // domain max
+            '#bd0026', // range max
+          ],
         },
       });
       this.fitBounds(geojsonData);
@@ -92,6 +109,13 @@ export default class Mapbox {
       .setLngLat(coordinates)
       .setHTML(description)
       .addTo(this.map);
+
+    this.map.flyTo({
+      center: coordinates,
+      zoom: 12,
+      speed: 0.25,
+    });
+    // console.log('coords', coordinates);
   }
 
   fitBounds(geojsonData) {
