@@ -22,3 +22,17 @@ Tokens that need to be updated include:
 
 2. Google API: API Token + OAuth Client ID
 [Google Developers Console](https://console.developers.google.com/) > 'Credentials'
+
+In order for the front-end to work, we need to make sure that the following are defined as `environment variables` (either in a `.env` file, or in **Github Secrets**):
+
+```sh
+## Mapbox
+MAPBOX_ACCESS_TOKEN=
+MAPBOX_STYLE_URL=
+
+## Google
+GOOGLE_CLIENT_ID=
+GOOGLE_API_KEY=
+GOOGLE_SPREADSHEET_ID=
+GOOGLE_SPREADSHEET_NAME=
+```

@@ -3,11 +3,6 @@ import { select } from 'd3';
 import './style.scss';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
-const CLIENT_ID = '717930834965-anlolbsq30inesinii2ob36avcm8qlv7.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyBnMVnXtyiGd_Qb17O3qOJRowsq-NnfJ_I'; // TODO: add restriction on key
-// TODO: pull these out to configuration file
-const SPREADSHEET_ID = '1dXv2dysONvOCDPvrgrulEBRaNLGUqj8NOUX29r62SWI';
-const SHEET_NAME = 'Sheet1';
 
 const DISCOVERY_DOCS = ['https://sheets.googleapis.com/$discovery/rest?version=v4'];
 // Authorization scopes required by the API; multiple scopes can be
@@ -45,8 +40,8 @@ export default class GoogleAuth {
    */
   initClient() {
     gapi.client.init({
-      apiKey: API_KEY,
-      clientId: CLIENT_ID,
+      apiKey: process.env.GOOGLE_API_KEY,
+      clientId: process.env.GOOGLE_CLIENT_ID,
       discoveryDocs: DISCOVERY_DOCS,
       scope: SCOPES,
     }).then(() => {
@@ -93,8 +88,8 @@ export default class GoogleAuth {
     console.log('pullingData');
     // TODO: generalize this to be able to handle multiple sheets if needed
     gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: SHEET_NAME,
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+      range: process.env.GOOGLE_SPREADSHEET_NAME,
     }).then((response) => {
       // first element is column names
       const [cols, ...rows] = response.result.values;
