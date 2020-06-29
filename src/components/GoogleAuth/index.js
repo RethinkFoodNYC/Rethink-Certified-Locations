@@ -1,5 +1,5 @@
 import { select } from 'd3';
-
+import config from './config.json';
 import './style.scss';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
@@ -88,8 +88,8 @@ export default class GoogleAuth {
     console.log('pullingData');
     // TODO: generalize this to be able to handle multiple sheets if needed
     gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-      range: process.env.GOOGLE_SPREADSHEET_NAME,
+      spreadsheetId: config.GOOGLE_SPREADSHEET_ID,
+      range: config.GOOGLE_SPREADSHEET_NAME,
     }).then((response) => {
       // first element is column names
       const [cols, ...rows] = response.result.values;

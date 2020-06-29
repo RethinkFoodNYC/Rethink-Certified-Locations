@@ -33,6 +33,17 @@ MAPBOX_STYLE_URL=
 ## Google
 GOOGLE_CLIENT_ID=
 GOOGLE_API_KEY=
-GOOGLE_SPREADSHEET_ID=
-GOOGLE_SPREADSHEET_NAME=
+```
+
+---
+# DATA
+
+Data for pins is pulled in from a private google sheet that is configured in `src/components/GoogleAuth/config.json`
+
+There we have defined:
+```json
+{
+  "GOOGLE_SPREADSHEET_ID": "SHEET_ID",
+  "GOOGLE_SPREADSHEET_NAME":"SHEET_NAME"
+}
 ```
