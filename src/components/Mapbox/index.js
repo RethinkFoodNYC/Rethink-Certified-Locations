@@ -1,8 +1,8 @@
+import { extent } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import buffer from '@turf/buffer';
-import { extent } from 'd3-array';
 import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
@@ -29,7 +29,7 @@ export default class Mapbox {
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
-      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layer
+      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layerå
     });
   }
 
