@@ -1,8 +1,8 @@
+import { extent } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import buffer from '@turf/buffer';
-import { extent } from 'd3-array';
 import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
@@ -19,17 +19,17 @@ export default class Mapbox {
   }
 
   initializeMap() {
-    mapboxgl.accessToken = 'pk.eyJ1IjoidHdvbmluYyIsImEiOiJja2Jrd3R3Y3owYmU1MnBtZWJpamYzM25kIn0.Ux4w99PgqsjbjYaPZstK3A'; // Mapbox token
+    mapboxgl.accessToken = process.env.MAPBOX_ACCESS_TOKEN; // Mapbox token
     this.map = new mapboxgl.Map({
       container: 'map', // container id
-      style: 'mapbox://styles/twoninc/ckbkwx8sc0m3g1imu2wlu90ue', // stylesheet location
+      style: process.env.MAPBOX_STYLE_URL, // stylesheet location
       center: [-73.9716, 40.6992], // starting position, Brookyln Navy Yard
       zoom: 10, // starting zoom
     });
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
-      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layer
+      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layerå
     });
   }
 

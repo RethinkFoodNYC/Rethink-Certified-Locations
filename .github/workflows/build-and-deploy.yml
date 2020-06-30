@@ -10,9 +10,14 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
         with:
-          persist-credentials: false 
+          persist-credentials: false
 
       - name: Install and Build 🔧
+        env:
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          MAPBOX_STYLE_URL: ${{ secrets.MAPBOX_STYLE_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           yarn
           yarn build
@@ -22,6 +27,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: docs
+          FOLDER: dist
 
 
