@@ -113,15 +113,19 @@ export default class Mapbox {
       .setHTML(description)
       .addTo(this.map);
 
-    const pointsWithin = pointsWithinPolygon(point, buffered); // TODO: this has to be all points, not just the center point -- access geojsonData.features.geometry.coordinates
-    console.log('pointsWithin', pointsWithin);
+    const pointsWithin = pointsWithinPolygon(point, buffered);
+    //* *  ^^ TODO: this has to be all potential points,
+    /* not just `point`, the center point -- use geojsonData.features.geometry.coordinates
+    could make it a separate function and access geojsonData from addData(data) as it is
+    done in fitBounds(geojsonData) */
+
+    // console.log('pointsWithin', pointsWithin);
 
     this.map.flyTo({
       center: coordinates,
       zoom: 12,
       speed: 0.25,
     });
-    //
   }
 
   fitBounds(geojsonData) {
