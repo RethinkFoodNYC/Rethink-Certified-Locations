@@ -2,6 +2,7 @@ import { extent } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
+import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
 import { KEYS as K } from '../../globals/constants';
 
@@ -73,6 +74,7 @@ export default class Mapbox {
         },
       });
       this.fitBounds(geojsonData);
+      console.log('geojson', geojsonData);
     });
   }
 
@@ -100,7 +102,7 @@ export default class Mapbox {
     const buffered = buffer(point, 1, { units: 'miles' });
     this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
     // based on the buffered data generated on click
-    this.setGlobalState("selected", e.features[0].properties);
+    this.setGlobalState('selected', e.features[0].properties);
     const coordinates = e.features[0].geometry.coordinates.slice();
     const description = `<h3>${e.features[0].properties.Name}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties.Address}</h4>` + '<h4>' + '<b>' + 'Information: ' + `</b>${e.features[0].properties.Information}</h4>`;
     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
@@ -111,12 +113,15 @@ export default class Mapbox {
       .setHTML(description)
       .addTo(this.map);
 
+    const pointsWithin = pointsWithinPolygon(point, buffered); // TODO: this has to be all points, not just the center point -- access geojsonData.features.geometry.coordinates
+    console.log('pointsWithin', pointsWithin);
+
     this.map.flyTo({
       center: coordinates,
       zoom: 12,
       speed: 0.25,
     });
-    // console.log('coords', coordinates);
+    //
   }
 
   fitBounds(geojsonData) {
