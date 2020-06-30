@@ -14,8 +14,9 @@ const L = {
 };
 
 export default class Mapbox {
-  constructor() {
+  constructor(setGlobalState) {
     this.initializeMap();
+    this.setGlobalState = setGlobalState;
   }
 
   initializeMap() {
@@ -52,7 +53,7 @@ export default class Mapbox {
         paint: {
           'circle-radius': [
             'interpolate',
-            ['linear'],
+            ['linear'], // TODO: square root scale
             ['to-number', ['get', K.INFO]],
             MIN, // domain min
             2, // range min
@@ -99,7 +100,7 @@ export default class Mapbox {
     const buffered = buffer(point, 1, { units: 'miles' });
     this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
     // based on the buffered data generated on click
-
+    this.setGlobalState("selected", e.features[0].properties);
     const coordinates = e.features[0].geometry.coordinates.slice();
     const description = `<h3>${e.features[0].properties.Name}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties.Address}</h4>` + '<h4>' + '<b>' + 'Information: ' + `</b>${e.features[0].properties.Information}</h4>`;
     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
