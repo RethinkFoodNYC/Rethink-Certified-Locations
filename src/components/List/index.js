@@ -8,7 +8,7 @@ export default class List {
 
   addData(data) {
     console.log('data added to list');
-    console.log('data', (d) => Object.keys(d));
+    console.log('data', data);
 
     const table = select('#list');
 
@@ -17,7 +17,6 @@ export default class List {
       .data(data);
 
     header
-      .append('tr')
       .append('th')
       .text('List View');
 
@@ -28,20 +27,18 @@ export default class List {
       .join('td')
       .text((d) => d);
 
-    const body = table
+    this.body = table
       .append('tbody')
       .selectAll('tr')
       .data(data)
       .join('tr')
       .append('td');
 
-    body
+    this.body
       .selectAll('td')
       .data((d) => Object.values(d))
       .join('td')
       .text((d) => d);
-    // .data(data)
-    // .text((d) => d[0].Name);
   }
 
   removeData(data) {
@@ -51,5 +48,6 @@ export default class List {
   draw(state) {
     console.log('list is drawing!', state);
     // make selected BOLD
+    this.body.style('font-weight', (d) => (state.selected.Address === d.Address ? 'bold' : 'normal')); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
   }
 }
