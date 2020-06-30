@@ -1,9 +1,15 @@
+@import '../../styling/variables';
+
 #list {
+    display: table;
     position: absolute;
-    top: 10;
-    left: 10;
+    text-align: left;
+    border:1px solid #888;
+    padding: 1%;
+    top: 25px;
+    left: 5px;
     width: 30%;
-    height: 95%;
+    height: calc(100vh - 80px);
     background-color: white;
-  
+    overflow: scroll;
   }
