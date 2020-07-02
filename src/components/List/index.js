@@ -8,7 +8,7 @@ export default class List {
 
   addData(data) {
     console.log('data added to list');
-    console.log('data', data);
+    // console.log('data', data);
 
     const table = select('#list');
 
@@ -31,8 +31,7 @@ export default class List {
       .append('tbody')
       .selectAll('tr')
       .data(data)
-      .join('tr')
-      .append('td');
+      .join('tr');
 
     this.body
       .selectAll('td')
@@ -47,7 +46,8 @@ export default class List {
 
   draw(state) {
     console.log('list is drawing!', state);
-    // make selected BOLD
-    this.body.style('font-weight', (d) => (state.selected.Address === d.Address ? 'bold' : 'normal')); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
+    // make selected BOLD *** if there is a selection
+    this.body.style('font-weight', (d) => (state.selected && state.selected.Address === d.Address ? 'bold' : 'normal')); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
+    this.body.style('color', (d) => (state.inBuffer.includes(d.Address) ? 'red' : 'black'));
   }
 }
