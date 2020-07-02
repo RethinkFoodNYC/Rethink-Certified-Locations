@@ -1,6 +1,7 @@
 @import '../../styling/variables';
 
 #list {
+    font-family: sans-serif;
     display: table;
     position: absolute;
     text-align: left;
@@ -8,8 +9,8 @@
     padding: 1%;
     top: 25px;
     left: 5px;
-    width: 30%;
-    height: calc(100vh - 80px);
-    background-color: white;
+    width: 25%;
+    height: 90%;
+    background-color: rgba(255, 255, 255, 0.9);
     overflow: scroll;
   }

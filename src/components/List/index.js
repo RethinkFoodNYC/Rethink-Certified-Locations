@@ -48,6 +48,6 @@ export default class List {
     console.log('list is drawing!', state);
     // make selected BOLD *** if there is a selection
     this.body.style('font-weight', (d) => (state.selected && state.selected.Address === d.Address ? 'bold' : 'normal')); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
-    this.body.style('color', (d) => (state.inBuffer.includes(d.Address) ? 'red' : 'black'));
+    this.body.style('color', (d) => (state.inBuffer.includes(d.Address) ? 'black' : 'gray'));
   }
 }
