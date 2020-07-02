@@ -26,7 +26,7 @@ export default class Mapbox {
     this.map = new mapboxgl.Map({
       container: 'map', // container id
       style: process.env.MAPBOX_STYLE_URL, // stylesheet location
-      center: [-73.9716, 40.6992], // starting position, Brookyln Navy Yard
+      center: [-74.009914, 40.7440], // starting position, Brookyln Navy Yard
       zoom: 10, // starting zoom
     });
 
@@ -119,9 +119,7 @@ export default class Mapbox {
     const pointsWithin = pointsWithinPolygon(this.geojsonData, buffered);
 
     const inBuffer = pointsWithin.features.map(({ properties }) => properties.Address); // may make sense to use a unique id here instead
-    console.log('inbuffer', inBuffer);
     this.setGlobalState('inBuffer', inBuffer);
-    console.log('pointsWithin', pointsWithin);
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
