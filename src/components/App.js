@@ -4,6 +4,8 @@ import List from './List';
 
 // global state
 let state = {
+  signedState: false,
+  data: [],
   open: [],
   active: [],
   inBuffer: [],
@@ -13,34 +15,38 @@ let state = {
 // initialize both components with data
 export default class App {
   init() {
-    this.passDataToComponents = this.passDataToComponents.bind(this);
-    this.removeDataFromComponents = this.removeDataFromComponents.bind(this);
+    this.handleLogIn = this.handleLogIn.bind(this);
+    this.handleLogOut = this.handleLogOut.bind(this);
     this.setGlobalState = this.setGlobalState.bind(this);
 
     // sets up google authentication client
     // once a user logs in, automatically fetches data
     // once data is fetched, it passes it into the callback to initialize map
-    this.googleAuth = new GoogleAuth(this.passDataToComponents, this.removeDataFromComponents);
-    this.map = new Mapbox(this.setGlobalState);
+    this.googleAuth = new GoogleAuth(this.handleLogIn, this.handleLogOut);
+    this.map = new Mapbox(this.setGlobalState, state);
     this.list = new List(this.setGlobalState);
   }
 
   // gets called once user has logged in
-  passDataToComponents(data) {
+  handleLogIn(data) {
     this.map.addData(data);
     this.list.addData(data);
+    this.setGlobalState('signedState', true);
+    this.setGlobalState('data', data);
   }
 
   // gets called when a user signs out of app
-  removeDataFromComponents() {
+  handleLogOut() {
     this.map.removeData();
     this.list.removeData();
+    this.setGlobalState('signedState', false);
+    this.setGlobalState('data', []);
   }
 
   // UTILITY FUNCTION: state updating function that we pass to our components so that they are able to update our global state object
   setGlobalState(key, data) {
     state = { ...state, [key]: data };
-    console.log("new state:", state);
+    console.log('new state:', state);
     this.update();
   }
 
