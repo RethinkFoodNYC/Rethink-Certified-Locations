@@ -15,9 +15,10 @@ const L = {
 };
 
 export default class Mapbox {
-  constructor(setGlobalState) {
+  constructor(setGlobalState, state) {
     this.initializeMap();
     this.setGlobalState = setGlobalState;
+    this.data = state.data;
   }
 
   initializeMap() {
@@ -37,12 +38,14 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
+    this.data = data;
     const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // cannot define before `addData(data)` has been called
     csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
+      this.geojsonData = geojsonData;
       this.map.addSource(L.CSV_DATA, {
         type: 'geojson',
         data: geojsonData,
@@ -74,7 +77,7 @@ export default class Mapbox {
         },
       });
       this.fitBounds(geojsonData);
-      console.log('geojson', geojsonData);
+      console.log('data', data);
     });
   }
 
@@ -113,16 +116,14 @@ export default class Mapbox {
       .setHTML(description)
       .addTo(this.map);
 
-    const pointsWithin = pointsWithinPolygon(point, buffered);
-    //* *  ^^ TODO: this has to be all potential points,
-    /* not just `point`, the center point -- use geojsonData.features.geometry.coordinates
-    could make it a separate function and access geojsonData from addData(data) as it is
-    done in fitBounds(geojsonData) */
+    const pointsWithin = pointsWithinPolygon(this.geojsonData, buffered);
 
-    // console.log('pointsWithin', pointsWithin);
-
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties.Address); // may make sense to use a unique id here instead
+    console.log('inbuffer', inBuffer);
+    this.setGlobalState('inBuffer', inBuffer);
+    console.log('pointsWithin', pointsWithin);
     this.map.flyTo({
-      center: coordinates,
+      center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
       speed: 0.25,
     });
