@@ -1,6 +1,7 @@
 import Mapbox from './Mapbox/index';
 import GoogleAuth from './GoogleAuth';
 import List from './List';
+import { KEYS as K } from '../globals/constants';
 
 // global state
 let state = {
@@ -31,16 +32,16 @@ export default class App {
   handleLogIn(data) {
     this.map.addData(data);
     this.list.addData(data);
-    this.setGlobalState('isSignedIn', true);
-    this.setGlobalState('data', data);
+    this.setGlobalState(K.IS_SIGNED_IN, true);
+    this.setGlobalState(K.DATA, data);
   }
 
   // gets called when a user signs out of app
   handleLogOut() {
     this.map.removeData();
     this.list.removeData();
-    this.setGlobalState('isSignedIn', false);
-    this.setGlobalState('data', []);
+    this.setGlobalState(K.IS_SIGNED_IN, false);
+    this.setGlobalState(K.DATA, []);
   }
 
   // UTILITY FUNCTION: state updating function that we pass to our components so that they are able to update our global state object

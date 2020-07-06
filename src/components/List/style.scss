@@ -13,4 +13,13 @@
     height: 90%;
     background-color: rgba(255, 255, 255, 0.9);
     overflow: scroll;
+    color: gray
+  }
+
+  tr.selected{
+    font-weight: bold;
+  }
+
+  tr.inBuffer{
+    color: black;
   }

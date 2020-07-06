@@ -117,7 +117,7 @@ export default class Mapbox {
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
 
     const inBuffer = pointsWithin.features.map(({ properties }) => properties.Address); // may make sense to use a unique id here instead
-    this.setGlobalState('inBuffer', inBuffer);
+    this.setGlobalState(K.IN_BUFFER, inBuffer);
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
