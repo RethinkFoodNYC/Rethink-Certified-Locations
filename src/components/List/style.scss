@@ -31,8 +31,8 @@
   }
 
   tr.notInBuffer {
-    color: gray;
+    color: transparent;
     overflow: hidden;
-    line-height: 20px;
+    line-height: 0px;
   }
 
