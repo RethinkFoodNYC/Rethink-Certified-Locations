@@ -26,7 +26,7 @@ export default class Mapbox {
     this.map = new mapboxgl.Map({
       container: 'map', // container id
       style: process.env.MAPBOX_STYLE_URL, // stylesheet location
-      center: [-74.009914, 40.7440], // starting position, Brookyln Navy Yard
+      center: [-74.009914, 40.7440], // starting position, Hoboken (offset from NYC because of list view)
       zoom: 10, // starting zoom
     });
 
@@ -38,14 +38,13 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    this.data = data;
     const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // cannot define before `addData(data)` has been called
     csv2geojson.csv2geojson(data, {
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
-      this.geojsonData = geojsonData;
+      this.data = geojsonData;
       this.map.addSource(L.CSV_DATA, {
         type: 'geojson',
         data: geojsonData,
@@ -77,7 +76,6 @@ export default class Mapbox {
         },
       });
       this.fitBounds(geojsonData);
-      console.log('data', data);
     });
   }
 
@@ -116,7 +114,7 @@ export default class Mapbox {
       .setHTML(description)
       .addTo(this.map);
 
-    const pointsWithin = pointsWithinPolygon(this.geojsonData, buffered);
+    const pointsWithin = pointsWithinPolygon(this.data, buffered);
 
     const inBuffer = pointsWithin.features.map(({ properties }) => properties.Address); // may make sense to use a unique id here instead
     this.setGlobalState('inBuffer', inBuffer);
