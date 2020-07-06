@@ -50,6 +50,6 @@ export default class List {
     // make selected BOLD *** if there is a selection
     this.body.classed('selected', (d) => (state.selected && state.selected[K.REST_ADDRESS] === d[K.REST_ADDRESS])); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
     this.body.classed('inBuffer', (d) => (state.inBuffer.includes(d[K.REST_ADDRESS])));
-    this.body.classed('notInBuffer', (d) => !(state.inBuffer.includes(d[K.REST_ADDRESS])));
+    this.body.classed('notInBuffer', (d) => (state.inBuffer.length !== 0 && !(state.inBuffer.includes(d[K.REST_ADDRESS]))));
   }
 }
