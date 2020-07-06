@@ -77,6 +77,7 @@ export default class Mapbox {
       });
       this.fitBounds(geojsonData);
     });
+    console.log('data', data);
   }
 
   /** Gets called externally from app once a user has logged out */
@@ -104,8 +105,9 @@ export default class Mapbox {
     this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
     // based on the buffered data generated on click
     this.setGlobalState('selected', e.features[0].properties);
+    console.log('e.features', e.features[0].properties);
     const coordinates = e.features[0].geometry.coordinates.slice();
-    const description = `<h3>${e.features[0].properties.Name}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties.Address}</h4>` + '<h4>' + '<b>' + 'Information: ' + `</b>${e.features[0].properties.Information}</h4>`;
+    const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
       coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
     }
@@ -116,7 +118,7 @@ export default class Mapbox {
 
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
 
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties.Address); // may make sense to use a unique id here instead
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead
     this.setGlobalState(K.IN_BUFFER, inBuffer);
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window

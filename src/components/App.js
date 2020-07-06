@@ -5,12 +5,12 @@ import { KEYS as K } from '../globals/constants';
 
 // global state
 let state = {
-  isSignedIn: false, // is user signed in?
-  data: [], // remains empty until a user signs in, then is filled through GoogleAuth
-  visibleInList: [], // is the corresponding data point open in the list? i.e. determines if height = 0 for list view
-  toggleOn: [], // is the list view toggle on or off?
-  inBuffer: [], // is this point within the buffered zone (one mile radius) of the `selected` point?
-  selected: null, // this will be the selected point
+  [K.IS_SIGNED_IN]: false, // is user signed in?
+  [K.DATA]: [], // remains empty until a user signs in, then is filled through GoogleAuth
+  [K.VISIBLE_IN_LIST]: [], // is the corresponding data point open in the list? i.e. determines if height = 0 for list view
+  [K.TOGGLE_ON]: [], // is the list view toggle on or off?
+  [K.IN_BUFFER]: [], // is this point within the buffered zone (one mile radius) of the `selected` point?
+  [K.SELECTED]: null, // this will be the selected point
 };
 
 // initialize both components with data
