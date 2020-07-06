@@ -102,11 +102,17 @@ export default class Mapbox {
   handleClick(e) {
     const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
     const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
-    // based on the buffered data generated on click
+    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+    // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
+    console.log('point', point);
+    // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
+    //   || !(data.includes(d[coordinates]))
+    // this.map.removeLayer(L.BUFFER);
+    // }
+
     this.setGlobalState('selected', e.features[0].properties);
-    console.log('e.features', e.features[0].properties);
     const coordinates = e.features[0].geometry.coordinates.slice();
+    console.log('coordinates', coordinates);
     const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
       coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
