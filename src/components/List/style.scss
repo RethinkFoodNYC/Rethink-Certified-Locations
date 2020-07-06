@@ -2,24 +2,34 @@
 
 #list {
     font-family: sans-serif;
-    display: table;
+    display: table-row;
     position: absolute;
     text-align: left;
     border:1px solid #888;
     padding: 1%;
     top: 25px;
     left: 5px;
-    width: 25%;
+    width: 30%;
     height: 90%;
     background-color: rgba(255, 255, 255, 0.9);
+    color: gray;
+    //table-layout: fixed;
     overflow: scroll;
-    color: gray
+  }
+
+thead{
+}
+
+  tbody{
+    height: 0px;
   }
 
   tr.selected{
     font-weight: bold;
+    height: 20px;
   }
 
   tr.inBuffer{
-    color: black;
+    color: red;
+    height: 20px;
   }
