@@ -4,12 +4,12 @@ import List from './List';
 
 // global state
 let state = {
-  signedState: false,
-  data: [],
-  open: [],
-  active: [],
-  inBuffer: [],
-  selected: null,
+  isSignedIn: false, // is user signed in?
+  data: [], // remains empty until a user signs in, then is filled through GoogleAuth
+  visibleInList: [], // is the corresponding data point open in the list? i.e. determines if height = 0 for list view
+  toggleOn: [], // is the list view toggle on or off?
+  inBuffer: [], // is this point within the buffered zone (one mile radius) of the `selected` point?
+  selected: null, // this will be the selected point
 };
 
 // initialize both components with data
@@ -31,7 +31,7 @@ export default class App {
   handleLogIn(data) {
     this.map.addData(data);
     this.list.addData(data);
-    this.setGlobalState('signedState', true);
+    this.setGlobalState('isSignedIn', true);
     this.setGlobalState('data', data);
   }
 
@@ -39,7 +39,7 @@ export default class App {
   handleLogOut() {
     this.map.removeData();
     this.list.removeData();
-    this.setGlobalState('signedState', false);
+    this.setGlobalState('isSignedIn', false);
     this.setGlobalState('data', []);
   }
 
