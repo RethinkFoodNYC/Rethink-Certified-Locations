@@ -1,27 +1,58 @@
 import Mapbox from './Mapbox/index';
 import GoogleAuth from './GoogleAuth';
-// import list
+import List from './List';
+import { KEYS as K } from '../globals/constants';
+
+// global state
+let state = {
+  [K.IS_SIGNED_IN]: false, // is user signed in?
+  [K.DATA]: [], // remains empty until a user signs in, then is filled through GoogleAuth
+  [K.VISIBLE_IN_LIST]: [], // is the corresponding data point open in the list? i.e. determines if height = 0 for list view
+  [K.TOGGLE_ON]: [], // is the list view toggle on or off?
+  [K.IN_BUFFER]: [], // is this point within the buffered zone (one mile radius) of the `selected` point?
+  [K.SELECTED]: null, // this will be the selected point
+};
 
 // initialize both components with data
 export default class App {
   init() {
-    this.passDataToMap = this.passDataToMap.bind(this);
-    this.removeDataFromMap = this.removeDataFromMap.bind(this);
+    this.handleLogIn = this.handleLogIn.bind(this);
+    this.handleLogOut = this.handleLogOut.bind(this);
+    this.setGlobalState = this.setGlobalState.bind(this);
 
     // sets up google authentication client
     // once a user logs in, automatically fetches data
     // once data is fetched, it passes it into the callback to initialize map
-    this.googleAuth = new GoogleAuth(this.passDataToMap, this.removeDataFromMap);
-    this.map = new Mapbox();
+    this.googleAuth = new GoogleAuth(this.handleLogIn, this.handleLogOut);
+    this.map = new Mapbox(this.setGlobalState, state);
+    this.list = new List(this.setGlobalState);
   }
 
   // gets called once user has logged in
-  passDataToMap(data) {
+  handleLogIn(data) {
     this.map.addData(data);
+    this.list.addData(data);
+    this.setGlobalState(K.IS_SIGNED_IN, true);
+    this.setGlobalState(K.DATA, data);
   }
 
   // gets called when a user signs out of app
-  removeDataFromMap() {
+  handleLogOut() {
     this.map.removeData();
+    this.list.removeData();
+    this.setGlobalState(K.IS_SIGNED_IN, false);
+    this.setGlobalState(K.DATA, []);
+  }
+
+  // UTILITY FUNCTION: state updating function that we pass to our components so that they are able to update our global state object
+  setGlobalState(key, data) {
+    state = { ...state, [key]: data };
+    console.log('new state:', state);
+    this.update();
+  }
+
+  update() {
+    // this.map.draw(state);
+    this.list.draw(state);
   }
 }

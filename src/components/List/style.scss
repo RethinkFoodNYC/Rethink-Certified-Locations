@@ -1,0 +1,38 @@
+@import '../../styling/variables';
+
+#list {
+    font-family: sans-serif;
+    display: table-row;
+    position: absolute;
+    text-align: left;
+    border:1px solid #888;
+    padding: 1%;
+    top: 25px;
+    left: 5px;
+    width: 30%;
+    height: 90%;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: black;
+    //table-layout: fixed;
+    overflow: scroll;
+    white-space: nowrap;
+  }
+
+  tr.selected.inBuffer{ // selected is always already inBuffer, so both must be called here
+    font-weight: bold;
+    color: red;
+    height: 20px;
+  }
+
+  tr.inBuffer{
+    color: black;
+    overflow: hidden;
+    height: 20px;
+  }
+
+  tr.notInBuffer {
+    color: transparent;
+    overflow: hidden;
+    line-height: 0px;
+  }
+

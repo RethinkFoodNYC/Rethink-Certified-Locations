@@ -2,6 +2,7 @@ import { extent } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
+import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
 import { KEYS as K } from '../../globals/constants';
 
@@ -14,8 +15,10 @@ const L = {
 };
 
 export default class Mapbox {
-  constructor() {
+  constructor(setGlobalState, state) {
     this.initializeMap();
+    this.setGlobalState = setGlobalState;
+    this.data = state.data;
   }
 
   initializeMap() {
@@ -23,7 +26,7 @@ export default class Mapbox {
     this.map = new mapboxgl.Map({
       container: 'map', // container id
       style: process.env.MAPBOX_STYLE_URL, // stylesheet location
-      center: [-73.9716, 40.6992], // starting position, Brookyln Navy Yard
+      center: [-74.009914, 40.7440], // starting position, Hoboken (offset from NYC because of list view)
       zoom: 10, // starting zoom
     });
 
@@ -41,6 +44,7 @@ export default class Mapbox {
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
+      this.data = geojsonData;
       this.map.addSource(L.CSV_DATA, {
         type: 'geojson',
         data: geojsonData,
@@ -52,7 +56,7 @@ export default class Mapbox {
         paint: {
           'circle-radius': [
             'interpolate',
-            ['linear'],
+            ['linear'], // TODO: square root scale
             ['to-number', ['get', K.INFO]],
             MIN, // domain min
             2, // range min
@@ -73,6 +77,7 @@ export default class Mapbox {
       });
       this.fitBounds(geojsonData);
     });
+    console.log('data', data);
   }
 
   /** Gets called externally from app once a user has logged out */
@@ -97,11 +102,18 @@ export default class Mapbox {
   handleClick(e) {
     const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
     const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER,
-    // based on the buffered data generated on click
+    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+    // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
+    console.log('point', point);
+    // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
+    //   || !(data.includes(d[coordinates]))
+    // this.map.removeLayer(L.BUFFER);
+    // }
 
+    this.setGlobalState('selected', e.features[0].properties);
     const coordinates = e.features[0].geometry.coordinates.slice();
-    const description = `<h3>${e.features[0].properties.Name}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties.Address}</h4>` + '<h4>' + '<b>' + 'Information: ' + `</b>${e.features[0].properties.Information}</h4>`;
+    console.log('coordinates', coordinates);
+    const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
       coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
     }
@@ -110,12 +122,15 @@ export default class Mapbox {
       .setHTML(description)
       .addTo(this.map);
 
+    const pointsWithin = pointsWithinPolygon(this.data, buffered);
+
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead
+    this.setGlobalState(K.IN_BUFFER, inBuffer);
     this.map.flyTo({
-      center: coordinates,
+      center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
       speed: 0.25,
     });
-    // console.log('coords', coordinates);
   }
 
   fitBounds(geojsonData) {
