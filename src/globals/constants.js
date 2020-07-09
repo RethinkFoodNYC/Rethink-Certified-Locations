@@ -1,6 +1,8 @@
 export const KEYS = {
+  CAT: 'Category',
   LAT: 'Latitude',
   LONG: 'Longitude',
+  INFO_test: 'Information',
   INFO: 'What is your estimated kitchen square footage? ', // change this obv
   IS_SIGNED_IN: 'isSignedIn',
   DATA: 'data',
