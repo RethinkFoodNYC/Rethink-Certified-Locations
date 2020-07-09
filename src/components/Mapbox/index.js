@@ -12,6 +12,8 @@ import './style.scss';
 const L = {
   CSV_DATA: 'csvData',
   BUFFER: 'buffer',
+  REST: 'Restaurant',
+  CBOs: 'CBOs',
 };
 
 export default class Mapbox {
@@ -32,14 +34,17 @@ export default class Mapbox {
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
-      this.map.on('click', L.CSV_DATA, (e) => this.handleClick(e)); // sets up on click listener to csv_data layerå
+      this.map.on('click', L.REST, (e) => this.handleClick(e)); // sets up on click listener to each layer we want "clickable"
+      this.map.on('click', L.CBOs, (e) => this.handleClick(e)); // TODO: surely there's a more efficient way to do this...
     });
   }
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO])); // cannot define before `addData(data)` has been called
-    csv2geojson.csv2geojson(data, {
+    console.log('data', data);
+    // const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO_test])); // cannot define before `addData(data)` has been called
+    const flatData = data.map(([name, data]) => data).flat();
+    csv2geojson.csv2geojson(flatData, { // restaurants only
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
@@ -50,39 +55,76 @@ export default class Mapbox {
         data: geojsonData,
       });
       this.map.addLayer({
-        id: L.CSV_DATA,
+        id: L.REST,
         type: 'circle',
         source: L.CSV_DATA,
+        layout: {
+          visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON true = 'visible', false = 'none'
+        },
+        filter: ['==', K.CAT, L.REST],
         paint: {
-          'circle-radius': [
-            'interpolate',
-            ['linear'], // TODO: square root scale
-            ['to-number', ['get', K.INFO]],
-            MIN, // domain min
-            2, // range min
-            MAX, // domain max
-            7, // range max
-          ],
+          'circle-radius': 5,
+          // [
+          //   'interpolate',
+          //   ['linear'], // TODO: square root scale
+          //   ['to-number', ['get', K.INFO_test]],
+          //   MIN, // domain min
+          //   2, // range min
+          //   MAX, // domain max
+          //   7, // range max
+          // ],
           // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
-          'circle-color': [
-            'interpolate',
-            ['linear'],
-            ['to-number', ['get', K.INFO]],
-            MIN, // domain min
-            '#feb24c', // range min
-            MAX, // domain max
-            '#bd0026', // range max
-          ],
+          'circle-color': 'red',
+          // [
+          //   'interpolate',
+          //   ['linear'],
+          //   ['to-number', ['get', K.INFO_test]],
+          //   MIN, // domain min
+          //   '#feb24c', // range min
+          //   MAX, // domain max
+          //   '#bd0026', // range max
+          // ],
         },
       });
-      this.fitBounds(geojsonData);
+      this.map.addLayer({
+        id: L.CBOs,
+        type: 'circle',
+        source: L.CSV_DATA,
+        layout: {
+          visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON
+        },
+        filter: ['==', K.CAT, L.CBOs],
+        paint: {
+          'circle-radius': 5,
+          // [
+          //   'interpolate',
+          //   ['linear'], // TODO: square root scale
+          //   ['to-number', ['get', K.INFO_test]],
+          //   MIN, // domain min
+          //   2, // range min
+          //   MAX, // domain max
+          //   7, // range max
+          // ],
+          // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
+          'circle-color': 'blue',
+          // [
+          //   'interpolate',
+          //   ['linear'],
+          //   ['to-number', ['get', K.INFO_test]],
+          //   MIN, // domain min
+          //   '#feb24c', // range min
+          //   MAX, // domain max
+          //   '#bd0026', // range max
+          // ],
+        },
+      });
+      // this.fitBounds(geojsonData); //turn this off to avoid zooming to USA level on every save
     });
-    console.log('data', data);
   }
 
   /** Gets called externally from app once a user has logged out */
   removeData() {
-    if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA);
+    if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA); // TODO: remove all layers
     if (this.map.getSource(L.CSV_DATA)) this.map.removeSource(L.CSV_DATA);
   }
 
@@ -124,7 +166,7 @@ export default class Mapbox {
 
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
 
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead TODO: update address field
     this.setGlobalState(K.IN_BUFFER, inBuffer);
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window

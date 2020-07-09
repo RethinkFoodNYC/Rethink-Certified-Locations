@@ -18,19 +18,19 @@ export default class List {
     }), {});
 
     const parent = select('#list');
-    
+
     const category = parent
       .selectAll('div.category')
       .data(data)
       .join('div')
       .attr('class', 'category')
       .text(([name, data]) => name)
-      .on('click', ([name, data]) => {
+      .on('click', ([name, data]) => { // TODO: stop propogation -- make this specific to a header row so that the class changes to isOpen ONLY when "Restaurant" or "CBOs" row is clicked
         this.isOpen = {
           ...this.isOpen,
           [name]: !this.isOpen[name],
         };
-        this.openOrCloseCategory()
+        this.openOrCloseCategory();
       });
 
     this.listItems = category
@@ -38,7 +38,7 @@ export default class List {
       .data(([name, data]) => data)
       .join('div')
       .attr('class', 'listItem')
-      .text(d => d[K.INFO_test]);
+      .text((d) => d[K.NAME_test]);
 
     // const table = select('#list');
 
@@ -72,9 +72,9 @@ export default class List {
 
   removeData(data) {
     console.log('data removed from list');
-  } 
+  }
 
-  openOrCloseCategory() {
+  openOrCloseCategory() { // TODO: open should be default state
     this.listItems.classed('isOpen', (d) => this.isOpen[d[K.CAT]]); // TODO: possibly inherit from parent rather than confirm each category
   }
 
@@ -82,8 +82,8 @@ export default class List {
     console.log('list is drawing!', state);
 
     // make selected BOLD *** if there is a selection
-    // this.body.classed('selected', (d) => (state.selected && state.selected[K.REST_ADDRESS] === d[K.REST_ADDRESS])); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
-    // this.body.classed('inBuffer', (d) => (state.inBuffer.includes(d[K.REST_ADDRESS])));
-    // this.body.classed('notInBuffer', (d) => (state.inBuffer.length !== 0 && !(state.inBuffer.includes(d[K.REST_ADDRESS]))));
+    this.listItems.classed('selected', (d) => (state.selected && state.selected[K.REST_ADDRESS] === d[K.REST_ADDRESS])); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
+    this.listItems.classed('inBuffer', (d) => (state.inBuffer.includes(d[K.REST_ADDRESS])));
+    this.listItems.classed('notInBuffer', (d) => (state.inBuffer.length !== 0 && !(state.inBuffer.includes(d[K.REST_ADDRESS]))));
   }
 }

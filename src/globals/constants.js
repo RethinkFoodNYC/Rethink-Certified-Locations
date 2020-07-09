@@ -3,6 +3,7 @@ export const KEYS = {
   LAT: 'Latitude',
   LONG: 'Longitude',
   INFO_test: 'Information',
+  NAME_test: 'Name',
   INFO: 'What is your estimated kitchen square footage? ', // change this obv
   IS_SIGNED_IN: 'isSignedIn',
   DATA: 'data',
@@ -17,7 +18,7 @@ export const KEYS = {
   LAST_NAME: 'Last Name',
   CONTACT_PHONE: 'Contact Phone Number ',
   REST_NAME: 'Restaurant Name',
-  REST_ADDRESS: 'Restaurant Street Address ',
+  REST_ADDRESS: 'Address',
   REST_ZIP: 'Restaurant Zip Code ',
   PPE_ACCESS: 'Do you have access to the PPE in line with COVID-19 requirements?',
   FSR: 'What is your food safety rating?',
