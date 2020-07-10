@@ -8,19 +8,32 @@ import { KEYS as K } from '../../globals/constants';
 
 import './style.scss';
 
-// Layers Names
-const L = {
-  CSV_DATA: 'csvData',
-  BUFFER: 'buffer',
-  REST: 'Restaurant',
-  CBOs: 'CBOs',
-};
+const layerGenerator = (id, source, color) => ({
+  id,
+  type: 'circle',
+  source,
+  layout: {
+    visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON
+  },
+  filter: ['==', K.CAT, id],
+  paint: {
+    'circle-radius': 5,
+    'circle-color': color,
+  },
+});
 
 export default class Mapbox {
   constructor(setGlobalState, state) {
     this.initializeMap();
     this.setGlobalState = setGlobalState;
     this.data = state.data;
+    this.S = { // sources
+      CVS_DATA: 'csvData',
+      BUFFER: 'buffer',
+    };
+    this.L = { // layers
+      BUFFER: 'buffer', // dynamically populated
+    };
   }
 
   initializeMap() {
@@ -34,106 +47,60 @@ export default class Mapbox {
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
-      this.map.on('click', L.REST, (e) => this.handleClick(e)); // sets up on click listener to each layer we want "clickable"
-      this.map.on('click', L.CBOs, (e) => this.handleClick(e)); // TODO: surely there's a more efficient way to do this...
     });
   }
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    console.log('data', data);
-    // const [MIN, MAX] = extent(data, (d) => Number(d[K.INFO_test])); // cannot define before `addData(data)` has been called
-    const flatData = data.map(([name, data]) => data).flat();
-    csv2geojson.csv2geojson(flatData, { // restaurants only
+    // console.log('data', data);
+    // update the bound layers obj to be dynamic with the data
+    this.L = data.reduce((agg, [name, _]) => ({
+      ...agg,
+      [name.toUpperCase().slice(0, 4)]: name,
+    }), this.L);
+    // flatten data to add all points to the geojson
+    const flatData = data.map(([_, layerData]) => layerData).flat();
+    csv2geojson.csv2geojson(flatData, {
       latfield: K.LAT,
       lonfield: K.LONG,
       delimiter: ',',
     }, (err, geojsonData) => {
       this.data = geojsonData;
-      this.map.addSource(L.CSV_DATA, {
+      this.map.addSource(this.S.CVS_DATA, {
         type: 'geojson',
         data: geojsonData,
       });
-      this.map.addLayer({
-        id: L.REST,
-        type: 'circle',
-        source: L.CSV_DATA,
-        layout: {
-          visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON true = 'visible', false = 'none'
-        },
-        filter: ['==', K.CAT, L.REST],
-        paint: {
-          'circle-radius': 5,
-          // [
-          //   'interpolate',
-          //   ['linear'], // TODO: square root scale
-          //   ['to-number', ['get', K.INFO_test]],
-          //   MIN, // domain min
-          //   2, // range min
-          //   MAX, // domain max
-          //   7, // range max
-          // ],
-          // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
-          'circle-color': 'red',
-          // [
-          //   'interpolate',
-          //   ['linear'],
-          //   ['to-number', ['get', K.INFO_test]],
-          //   MIN, // domain min
-          //   '#feb24c', // range min
-          //   MAX, // domain max
-          //   '#bd0026', // range max
-          // ],
-        },
-      });
-      this.map.addLayer({
-        id: L.CBOs,
-        type: 'circle',
-        source: L.CSV_DATA,
-        layout: {
-          visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON
-        },
-        filter: ['==', K.CAT, L.CBOs],
-        paint: {
-          'circle-radius': 5,
-          // [
-          //   'interpolate',
-          //   ['linear'], // TODO: square root scale
-          //   ['to-number', ['get', K.INFO_test]],
-          //   MIN, // domain min
-          //   2, // range min
-          //   MAX, // domain max
-          //   7, // range max
-          // ],
-          // to make this a custom icon: https://docs.mapbox.com/mapbox-gl-js/example/add-image/
-          'circle-color': 'blue',
-          // [
-          //   'interpolate',
-          //   ['linear'],
-          //   ['to-number', ['get', K.INFO_test]],
-          //   MIN, // domain min
-          //   '#feb24c', // range min
-          //   MAX, // domain max
-          //   '#bd0026', // range max
-          // ],
-        },
-      });
+      const dataLayers = Object.values(this.L)
+        .filter((layer) => layer !== this.L.BUFFER)
+      // add layers
+      dataLayers.forEach((layer) => this.map.addLayer(layerGenerator(layer, this.S.CVS_DATA, 'grey')));
+      // sets up on click listener to each layer we want "clickable"
+      dataLayers.forEach((layer) => this.map.on('click', layer, (e) => this.handleClick(e)));
       // this.fitBounds(geojsonData); //turn this off to avoid zooming to USA level on every save
     });
   }
 
   /** Gets called externally from app once a user has logged out */
   removeData() {
-    if (this.map.getLayer(L.CSV_DATA)) this.map.removeLayer(L.CSV_DATA); // TODO: remove all layers
-    if (this.map.getSource(L.CSV_DATA)) this.map.removeSource(L.CSV_DATA);
+    // Part 1: remove all layers
+    Object.values(this.L).forEach((layer) => {
+      if (this.map.getLayer(layer)) this.map.removeLayer(layer);
+    });
+    // part 2: remove all sources
+    Object.values(this.S).forEach((source) => {
+      if (this.map.getSource(source)) this.map.removeSource(source);
+    });
   }
 
   addBuffer() {
-    this.map.addSource(L.BUFFER, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } });
+    this.map.addSource(
+      this.S.BUFFER,
+      { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } }
+    );
     this.map.addLayer({
-      id: 'buffer',
+      id: this.L.BUFFER,
       type: 'fill',
-      source: L.BUFFER,
+      source: this.S.BUFFER,
       paint: {
         'fill-color': 'blue',
         'fill-opacity': 0.5,
@@ -144,7 +111,7 @@ export default class Mapbox {
   handleClick(e) {
     const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
     const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(L.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+    this.map.getSource(this.S.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
     // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
     console.log('point', point);
     // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
