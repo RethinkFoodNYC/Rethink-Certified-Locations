@@ -110,12 +110,8 @@ export default class Mapbox {
     });
   }
 
-  selectPoint(point) {
-    // create buffer
-    const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(this.S.BUFFER).setData(buffered);
+  selectPoint(point, description) {
     const { coordinates } = point.geometry;
-    const description = 'text';
 
     // add tooltip
     new mapboxgl.Popup()
@@ -129,16 +125,22 @@ export default class Mapbox {
       zoom: 12,
       speed: 0.25,
     });
-
-    // set buffer
-    const pointsWithin = pointsWithinPolygon(this.data, buffered);
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
-    // this.setGlobalState(K.IN_BUFFER, inBuffer); // FIXME: currently causes infinite loop
   }
 
   handleClick(e) {
     if (!e.defaultPrevented) {
-      this.setGlobalState('selected', e.features[0].properties); // the rest is handled by draw
+      const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+
+      // create buffer
+      const buffered = buffer(point, 1, { units: 'miles' });
+      this.map.getSource(this.S.BUFFER).setData(buffered);
+      // set buffer
+      const pointsWithin = pointsWithinPolygon(this.data, buffered);
+      const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
+      this.setGlobalState(S.IN_BUFFER, inBuffer); // FIXME: currently causes infinite loop
+
+      // set selected
+      this.setGlobalState(S.SELECTED, e.features[0].properties); // the rest is handled by draw
       e.preventDefault(); // only do this on the first point hit
     }
   }
@@ -147,8 +149,14 @@ export default class Mapbox {
     // console.log('map is drawing!', state);
 
     if (state[S.SELECTED] !== null) {
-      const point = turf.point([state[S.SELECTED][K.LONG], state[S.SELECTED][K.LAT]]);
-      this.selectPoint(point);
+      const selectedData = state[S.SELECTED]
+      const point = turf.point([selectedData[K.LONG], selectedData[K.LAT]]);
+      const description = `
+        <h3>${selectedData[K.CAT]}: ${selectedData[K.NAME]}</h3> 
+        <h4> <b> Address: </b>${selectedData[K.FADD]}</h4> 
+        <h4> <b> Contact: </b>${selectedData[K.CONTACT_E]}</h4>
+        <h4> <b> Information: </b>${selectedData[K.INFO]}</h4>`;
+      this.selectPoint(point, description);
     }
   }
 

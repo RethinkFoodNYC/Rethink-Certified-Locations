@@ -20,13 +20,13 @@ export default class List {
       .attr('class', 'wrapper');
 
     this.category = this.wrapper
-      .selectAll('div.wrapper')
+      .selectAll('div.category')
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
       .html(([name, items]) => `<span>${name} (${items.length})</span>`)
       .on('click', function() {
-        select(this.parentNode).node().classList.toggle('isOpen');
+        this.parentNode.classList.toggle('isOpen');
       });
 
     this.body = this.wrapper
@@ -40,7 +40,6 @@ export default class List {
       .attr('class', 'listItem')
       .text((d) => d[K.NAME])
       .on('click', (d) => {
-        event.stopPropagation();
         this.setGlobalState(S.SELECTED, d);
       });
   }

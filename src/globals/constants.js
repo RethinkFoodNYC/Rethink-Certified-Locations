@@ -8,15 +8,15 @@ export const STATE = {
 };
 
 export const KEYS = {
+  TIME_STAMP: 'Timestamp',
   CAT: 'Category',
-  FADD: '_Formatted_Address',
+  NAME: 'Name',
+  CONTACT_E: 'Contact Email',
+  INFO: 'Information',
+  FADD: 'Formatted Address',
   LAT: 'Latitude',
   LONG: 'Longitude',
-  INFO: 'Information',
-  NAME: 'Name',
-  // INFO: 'What is your estimated kitchen square footage? ', // change this obv
   // restaurant survey question fields:
-  TIME_STAMP: 'Timestamp',
   EMAIL: 'Email Address',
   FIRST_NAME: 'First Name',
   LAST_NAME: 'Last Name',
