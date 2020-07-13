@@ -24,23 +24,45 @@ $rowHeight: 30px;
 
 .wrapper {
   max-height: $rowHeight;
+  min-height: $rowHeight;
   overflow: hidden;
   transition: max-height 300ms;
 
   &.isOpen {
     max-height: 1000px;
+
+    .category::before{
+      transform: translateX(-25%) rotate(-90deg) ;
+
+    }
+    .category .name{
+      font-weight: 600;
+    }
   }
 
   .category{
     padding: .5em;
-    border-bottom: $colorTextDark 1px solid;
-    font-weight: 700;
+    border-bottom: $colorDisabled 1px solid;
+    font-weight: 400;
     display: flex;
     align-items: center;
+
+    &::before{
+      content: "";
+      width: $iconWidth;
+      height: 100%;
+      background-image: url("../../../assets/arrow.svg");
+      transform-origin: center;
+      transition: transform 200ms;
+    }
+
+    .count{
+      font-weight: 600;
+    }
   }
 
   .body {
-    padding: .5em $iconWidth; // T R B L // T/B L/R
+    padding: 0 $iconWidth;
     height: 100%;
     overflow: scroll;
   }
@@ -50,9 +72,11 @@ $rowHeight: 30px;
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
-  border-bottom: $colorTextDark 1px solid;
+  border-bottom: $colorDisabled 1px solid;
   height:$rowHeight;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
   .selected.inBuffer.isOpen{ // selected is always already inBuffer, so both must be called here

@@ -24,8 +24,8 @@ export default class List {
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([name, items]) => `<span>${name} (${items.length})</span>`)
-      .on('click', function() {
+      .html(([name, items]) => `<span><span class="name">${name}</span> <span class="count">(${items.length})</span></span>`)
+      .on('click', function () {
         this.parentNode.classList.toggle('isOpen');
       });
 
@@ -47,7 +47,7 @@ export default class List {
   removeData(data) {
     // console.log('data removed from list');
     if (this.wrapper) {
-      this.wrapper.remove()
+      this.wrapper.remove();
     }
   }
 
