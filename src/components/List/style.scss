@@ -72,6 +72,7 @@ $rowHeight: 30px;
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
+  overflow: hidden; // TODO: figure out how to get ellipse to work
   border-bottom: $colorDisabled 1px solid;
   height:$rowHeight;
   cursor: pointer;
