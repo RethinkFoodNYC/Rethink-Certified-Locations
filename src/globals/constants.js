@@ -5,13 +5,13 @@ export const STATE = {
   TOGGLE_ON: 'toggleOn',
   IN_BUFFER: 'inBuffer',
   SELECTED: 'selected',
-}
+};
 
 export const KEYS = {
   CAT: 'Category',
   FADD: '_Formatted_Address',
-  LAT: 'L1',
-  LONG: 'L2',
+  LAT: 'Latitude',
+  LONG: 'Longitude',
   INFO: 'Information',
   NAME: 'Name',
   // INFO: 'What is your estimated kitchen square footage? ', // change this obv
