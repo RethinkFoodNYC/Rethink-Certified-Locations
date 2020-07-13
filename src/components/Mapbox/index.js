@@ -1,10 +1,10 @@
-import { extent } from 'd3';
+import { extent, select } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
-import { KEYS as K } from '../../globals/constants';
+import { KEYS as K, STATE as S } from '../../globals/constants';
 
 import './style.scss';
 
@@ -52,7 +52,6 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    // console.log('data', data);
     // update the bound layers obj to be dynamic with the data
     this.L = data.reduce((agg, [name, _]) => ({
       ...agg,
@@ -60,6 +59,7 @@ export default class Mapbox {
     }), this.L);
     // flatten data to add all points to the geojson
     const flatData = data.map(([_, layerData]) => layerData).flat();
+    console.log("flatData", flatData)
     csv2geojson.csv2geojson(flatData, {
       latfield: K.LAT,
       lonfield: K.LONG,
@@ -108,38 +108,77 @@ export default class Mapbox {
     });
   }
 
-  handleClick(e) {
-    const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+  selectPoint(point) {
+    console.log("selected point: ", point)
+    console.log(this)
+    // create buffer
     const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(this.S.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
-    // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
-    console.log('point', point);
-    // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
-    //   || !(data.includes(d[coordinates]))
-    // this.map.removeLayer(L.BUFFER);
-    // }
+    this.map.getSource(this.S.BUFFER).setData(buffered);
+    const { coordinates } = point.geometry;
+    const description = 'text';
 
-    this.setGlobalState('selected', e.features[0].properties);
-    const coordinates = e.features[0].geometry.coordinates.slice();
-    console.log('coordinates', coordinates);
-    const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
-    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
+    // add tooltip
     new mapboxgl.Popup()
       .setLngLat(coordinates)
       .setHTML(description)
       .addTo(this.map);
 
-    const pointsWithin = pointsWithinPolygon(this.data, buffered);
-
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead TODO: update address field
-    this.setGlobalState(K.IN_BUFFER, inBuffer);
+    // zoom to point
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
       speed: 0.25,
     });
+
+    // set buffer
+    const pointsWithin = pointsWithinPolygon(this.data, buffered);
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
+    this.setGlobalState(K.IN_BUFFER, inBuffer);
+  }
+
+  handleClick(e) {
+    const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+    this.setGlobalState('selected', e.features[0].properties);
+    this.selectPoint(point);
+    // const buffered = buffer(point, 1, { units: 'miles' });
+    // this.map.getSource(this.S.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
+    // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
+    // console.log('point', point);
+    // console.log('e', e)
+    // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
+    //   || !(data.includes(d[coordinates]))
+    // this.map.removeLayer(L.BUFFER);
+    // }
+
+    // const coordinates = e.features[0].geometry.coordinates.slice();
+    // console.log('coordinates', coordinates);
+    // const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
+    // while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    //   coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    // }
+    // new mapboxgl.Popup()
+    //   .setLngLat(coordinates)
+    //   .setHTML(description)
+    //   .addTo(this.map);
+
+    // const pointsWithin = pointsWithinPolygon(this.data, buffered);
+
+    // const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
+    // this.setGlobalState(K.IN_BUFFER, inBuffer);
+  //   this.map.flyTo({
+  //     center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
+  //     zoom: 12,
+  //     speed: 0.25,
+  //   });
+  }
+
+  draw(state) {
+    // console.log('map is drawing!', state);
+
+    if (state[S.SELECTED] !== null) {
+      const point = turf.point([state[S.SELECTED][K.LONG], state[S.SELECTED][K.LAT]]);
+      this.selectPoint(point);
+    }
   }
 
   fitBounds(geojsonData) {

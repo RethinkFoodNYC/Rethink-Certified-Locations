@@ -1,16 +1,20 @@
-export const KEYS = {
-  CAT: 'Category',
-  LAT: 'Latitude',
-  LONG: 'Longitude',
-  INFO_test: 'Information',
-  NAME_test: 'Name',
-  INFO: 'What is your estimated kitchen square footage? ', // change this obv
+export const STATE = {
   IS_SIGNED_IN: 'isSignedIn',
   DATA: 'data',
   VISIBLE_IN_LIST: 'visibleInList',
   TOGGLE_ON: 'toggleOn',
   IN_BUFFER: 'inBuffer',
   SELECTED: 'selected',
+}
+
+export const KEYS = {
+  CAT: 'Category',
+  FADD: '_Formatted_Address',
+  LAT: 'L1',
+  LONG: 'L2',
+  INFO: 'Information',
+  NAME: 'Name',
+  // INFO: 'What is your estimated kitchen square footage? ', // change this obv
   // restaurant survey question fields:
   TIME_STAMP: 'Timestamp',
   EMAIL: 'Email Address',

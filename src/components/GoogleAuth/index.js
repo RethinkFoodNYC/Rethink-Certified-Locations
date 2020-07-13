@@ -87,7 +87,6 @@ export default class GoogleAuth {
   }
 
   pullData() {
-    console.log('pullingData');
     // TODO: generalize this to be able to handle multiple sheets if needed
     gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: config.GOOGLE_SPREADSHEET_ID,
@@ -95,6 +94,8 @@ export default class GoogleAuth {
     }).then((response) => {
       // first element is column names
       const [cols, ...rows] = response.result.values;
+      console.log("rows:", rows)
+      console.log("cols:", cols);
       const parsed = rows.reduce((acc, row) => ([...acc,
         row.reduce((obj, val, i) => ({
           ...obj,
@@ -102,6 +103,7 @@ export default class GoogleAuth {
         }),
         {})]),
       []);
+      console.log("parsed:", parsed);
       this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
     });
   }
