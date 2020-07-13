@@ -18,19 +18,36 @@
     white-space: nowrap;
   }
 
-  tr.selected.inBuffer{ // selected is always already inBuffer, so both must be called here
+.category{
+  color: black;
+  font-weight: bolder;
+  background-color: rgb(169, 203, 231);
+}
+
+.listItem{
+  color: black;
+  font-weight: normal;
+  background-color: white;
+}
+
+.listItem:not(.isOpen){
+  color: transparent;
+  line-height: 0px;
+}
+
+  .selected.inBuffer.isOpen{ // selected is always already inBuffer, so both must be called here
     font-weight: bold;
-    color: red;
+    color: orange;
     height: 20px;
   }
 
-  tr.inBuffer{
+  .inBuffer.isOpen{
     color: black;
     overflow: hidden;
     height: 20px;
   }
 
-  tr.notInBuffer {
+  .notInBuffer.isOpen {
     color: transparent;
     overflow: hidden;
     line-height: 0px;

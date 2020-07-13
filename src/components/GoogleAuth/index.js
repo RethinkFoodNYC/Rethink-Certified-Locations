@@ -1,6 +1,8 @@
 import { select } from 'd3';
+import { groups } from 'd3-array';
 import config from './config.json';
 import './style.scss';
+import { KEYS as K } from '../../globals/constants';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
 
@@ -100,7 +102,7 @@ export default class GoogleAuth {
         }),
         {})]),
       []);
-      this.onReceiveData(parsed);
+      this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
     });
   }
 }
