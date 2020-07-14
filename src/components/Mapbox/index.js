@@ -8,32 +8,23 @@ import { KEYS as K, STATE as S } from '../../globals/constants';
 
 import './style.scss';
 
-const layerGenerator = (id, source, color) => ({
-  id,
-  type: 'circle',
-  source,
-  layout: {
-    visibility: 'visible', // TODO: connect this to setGlobalState: K.TOGGLE_ON
-  },
-  filter: ['==', K.CAT, id],
-  paint: {
-    'circle-radius': 5,
-    'circle-color': color,
-  },
-});
+const descriptionGenerator = (pointData) => `
+  <span className="header ${pointData[K.CAT]}">${pointData[K.CAT]}: ${pointData[K.NAME]}</span> 
+  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
+  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
+  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
+
+const colorLookup = { // TODO: make a color scale
+  RRP: '#e629af',
+  CBOs: '#e38944',
+};
 
 export default class Mapbox {
   constructor(setGlobalState, state) {
     this.initializeMap();
     this.setGlobalState = setGlobalState;
     this.data = state.data;
-    this.S = { // sources
-      CVS_DATA: 'csvData',
-      BUFFER: 'buffer',
-    };
-    this.L = { // layers
-      BUFFER: 'buffer', // dynamically populated
-    };
+    this.BUFFER = 'buffer';
   }
 
   initializeMap() {
@@ -52,42 +43,35 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    // update the bound layers obj to be dynamic with the data
-    this.L = data.reduce((agg, [name, _]) => ({
-      ...agg,
-      [name.toUpperCase().slice(0, 4)]: name,
-    }), this.L);
     // flatten data to add all points to the geojson
     const flatData = data.map(([, layerData]) => layerData).flat();
-    csv2geojson.csv2geojson(flatData, {
-      latfield: K.LAT,
-      lonfield: K.LONG,
-      includeLatLon: true, // to prevent library from deleting lat/long columns
-      delimiter: ',',
-    }, (err, geojsonData) => {
-      this.data = geojsonData;
-      this.map.addSource(this.S.CVS_DATA, {
-        type: 'geojson',
-        data: geojsonData,
-      });
-      const dataLayers = Object.values(this.L)
-        .filter((layer) => layer !== this.L.BUFFER);
-      // add layers
-      dataLayers.forEach((layer) => {
-        this.map.addLayer(layerGenerator(layer, this.S.CVS_DATA, 'grey'));
-        // sets up on click listener to each layer we want "clickable"
-        this.map.on('click', layer, (e) => this.handleClick(e));
-        // this.fitBounds(geojsonData); //turn this off to avoid zooming to USA level on every save
-      });
+
+    // use this array of markers to easily remove each one
+    this.markers = flatData.map((d) => {
+      // prevent undefined data points
+      const longLat = (d[K.LONG] !== undefined && d[K.LAT] !== undefined)
+        ? [d[K.LONG], d[K.LAT]]
+        : [0, 0];
+
+      // TODO: refactor to return an object of { pointUniqueID: markerElement } for enhanced selections from list
+      return new mapboxgl.Marker({
+        color: colorLookup[d[K.CAT]],
+        scale: 0.5,
+      })
+        .setLngLat(longLat)
+        .setPopup(
+          new mapboxgl.Popup({ offset: 20 })
+            .setHTML(descriptionGenerator(d))
+            .on('open', (e) => this.showBuffer(e.target._lngLat)),
+        )
+        .addTo(this.map);
     });
   }
 
   /** Gets called externally from app once a user has logged out */
   removeData() {
-    // Part 1: remove all layers
-    Object.values(this.L).forEach((layer) => {
-      if (this.map.getLayer(layer)) this.map.removeLayer(layer);
-    });
+    // Part 1: remove all markers
+    this.markers.forEach((marker) => marker.remove())
     // part 2: remove all sources
     Object.values(this.S).forEach((source) => {
       if (this.map.getSource(source)) this.map.removeSource(source);
@@ -96,13 +80,13 @@ export default class Mapbox {
 
   addBuffer() {
     this.map.addSource(
-      this.S.BUFFER,
+      this.BUFFER,
       { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } },
     );
     this.map.addLayer({
-      id: this.L.BUFFER,
+      id: this.BUFFER,
       type: 'fill',
-      source: this.S.BUFFER,
+      source: this.BUFFER,
       paint: {
         'fill-color': 'blue',
         'fill-opacity': 0.5,
@@ -110,39 +94,39 @@ export default class Mapbox {
     });
   }
 
-  selectPoint(point, description) {
-    const { coordinates } = point.geometry;
+  selectPoint(point) {
+    // const { coordinates } = point.geometry;
+    const { coordinates } = [point[K.LONG], point[K.LAT]];
 
     // add tooltip
-    new mapboxgl.Popup()
-      .setLngLat(coordinates)
-      .setHTML(description)
-      .addTo(this.map);
+    // new mapboxgl.Popup()
+    //   .setLngLat(coordinates)
+    //   .setHTML(descriptionGenerator(point))
+    //   .addTo(this.map);
 
     // zoom to point
     this.map.flyTo({
-      center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
+      center: coordinates, // this should be offset on the longitude/y dimension
+      // since the list view now hides the left part of the window
       zoom: 12,
       speed: 0.25,
     });
   }
 
-  handleClick(e) {
-    if (!e.defaultPrevented) {
-      const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
-
-      // create buffer
-      const buffered = buffer(point, 1, { units: 'miles' });
-      this.map.getSource(this.S.BUFFER).setData(buffered);
-      // set buffer
-      const pointsWithin = pointsWithinPolygon(this.data, buffered);
-      const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
-      this.setGlobalState(S.IN_BUFFER, inBuffer); // FIXME: currently causes infinite loop
-
-      // set selected
-      this.setGlobalState(S.SELECTED, e.features[0].properties); // the rest is handled by draw
-      e.preventDefault(); // only do this on the first point hit
-    }
+  showBuffer(vl, d) {
+    const point = turf.point([vl.lng, vl.lat]);
+    // create buffer
+    const buffered = buffer(point, 1, { units: 'miles' });
+    this.map.getSource(this.BUFFER).setData(buffered);
+    // set buffer
+    const pointsWithin = pointsWithinPolygon(this.data, buffered);
+    // may make sense to use a unique id here instead TODO: update address field
+    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]);
+    this.setGlobalState({
+      [S.IN_BUFFER]: inBuffer,
+      [S.SELECTED]: d,
+    });
+    // the rest is handled by draw
   }
 
   draw(state) {
@@ -151,12 +135,7 @@ export default class Mapbox {
     if (state[S.SELECTED] !== null) {
       const selectedData = state[S.SELECTED]
       const point = turf.point([selectedData[K.LONG], selectedData[K.LAT]]);
-      const description = `
-        <h3>${selectedData[K.CAT]}: ${selectedData[K.NAME]}</h3> 
-        <h4> <b> Address: </b>${selectedData[K.FADD]}</h4> 
-        <h4> <b> Contact: </b>${selectedData[K.CONTACT_E]}</h4>
-        <h4> <b> Information: </b>${selectedData[K.INFO]}</h4>`;
-      this.selectPoint(point, description);
+      this.selectPoint(point);
     }
   }
 

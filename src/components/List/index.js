@@ -40,7 +40,7 @@ export default class List {
       .attr('class', 'listItem')
       .text((d) => d[K.NAME])
       .on('click', (d) => {
-        this.setGlobalState(S.SELECTED, d);
+        this.setGlobalState({ [S.SELECTED]: d });
       });
   }
 
