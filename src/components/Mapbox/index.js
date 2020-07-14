@@ -1,10 +1,10 @@
-import { extent } from 'd3';
+import { extent, select } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
-import { KEYS as K } from '../../globals/constants';
+import { KEYS as K, STATE as S } from '../../globals/constants';
 
 import './style.scss';
 
@@ -52,17 +52,17 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData(data) {
-    // console.log('data', data);
     // update the bound layers obj to be dynamic with the data
     this.L = data.reduce((agg, [name, _]) => ({
       ...agg,
       [name.toUpperCase().slice(0, 4)]: name,
     }), this.L);
     // flatten data to add all points to the geojson
-    const flatData = data.map(([_, layerData]) => layerData).flat();
+    const flatData = data.map(([, layerData]) => layerData).flat();
     csv2geojson.csv2geojson(flatData, {
       latfield: K.LAT,
       lonfield: K.LONG,
+      includeLatLon: true, // to prevent library from deleting lat/long columns
       delimiter: ',',
     }, (err, geojsonData) => {
       this.data = geojsonData;
@@ -71,12 +71,14 @@ export default class Mapbox {
         data: geojsonData,
       });
       const dataLayers = Object.values(this.L)
-        .filter((layer) => layer !== this.L.BUFFER)
+        .filter((layer) => layer !== this.L.BUFFER);
       // add layers
-      dataLayers.forEach((layer) => this.map.addLayer(layerGenerator(layer, this.S.CVS_DATA, 'grey')));
-      // sets up on click listener to each layer we want "clickable"
-      dataLayers.forEach((layer) => this.map.on('click', layer, (e) => this.handleClick(e)));
-      // this.fitBounds(geojsonData); //turn this off to avoid zooming to USA level on every save
+      dataLayers.forEach((layer) => {
+        this.map.addLayer(layerGenerator(layer, this.S.CVS_DATA, 'grey'));
+        // sets up on click listener to each layer we want "clickable"
+        this.map.on('click', layer, (e) => this.handleClick(e));
+        // this.fitBounds(geojsonData); //turn this off to avoid zooming to USA level on every save
+      });
     });
   }
 
@@ -95,7 +97,7 @@ export default class Mapbox {
   addBuffer() {
     this.map.addSource(
       this.S.BUFFER,
-      { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } }
+      { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } },
     );
     this.map.addLayer({
       id: this.L.BUFFER,
@@ -108,38 +110,54 @@ export default class Mapbox {
     });
   }
 
-  handleClick(e) {
-    const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
-    const buffered = buffer(point, 1, { units: 'miles' });
-    this.map.getSource(this.S.BUFFER).setData(buffered); // pulls newly-populated data from L.BUFFER, based on the buffered data generated on click
-    // ** is there a clever way to turn the buffer off again, maybe by a conditional for if the `point` clicked is the same lat long as the current `point`, OR if it's not a point in L.CSV_DATA ?
-    console.log('point', point);
-    // if ( coordinates[0] === state.selected[K.LAT] && coordinates[1] === state.selected[K.LONG] {
-    //   || !(data.includes(d[coordinates]))
-    // this.map.removeLayer(L.BUFFER);
-    // }
+  selectPoint(point, description) {
+    const { coordinates } = point.geometry;
 
-    this.setGlobalState('selected', e.features[0].properties);
-    const coordinates = e.features[0].geometry.coordinates.slice();
-    console.log('coordinates', coordinates);
-    const description = `<h3>${e.features[0].properties[K.REST_NAME]}</h3>` + '<h4>' + '<b>' + 'Address: ' + `</b>${e.features[0].properties[K.REST_ADDRESS]} ${e.features[0].properties[K.REST_ZIP]}</h4>` + '<h4>' + '<b>' + 'Refrigeration Capacity: ' + `</b>${e.features[0].properties[K.REFRIDG_CAPACITY]}</h4>`;
-    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
+    // add tooltip
     new mapboxgl.Popup()
       .setLngLat(coordinates)
       .setHTML(description)
       .addTo(this.map);
 
-    const pointsWithin = pointsWithinPolygon(this.data, buffered);
-
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.REST_ADDRESS]]); // may make sense to use a unique id here instead TODO: update address field
-    this.setGlobalState(K.IN_BUFFER, inBuffer);
+    // zoom to point
     this.map.flyTo({
       center: coordinates, // this should be offset on the longitude/y dimension since the list view now hides the left part of the window
       zoom: 12,
       speed: 0.25,
     });
+  }
+
+  handleClick(e) {
+    if (!e.defaultPrevented) {
+      const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
+
+      // create buffer
+      const buffered = buffer(point, 1, { units: 'miles' });
+      this.map.getSource(this.S.BUFFER).setData(buffered);
+      // set buffer
+      const pointsWithin = pointsWithinPolygon(this.data, buffered);
+      const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]); // may make sense to use a unique id here instead TODO: update address field
+      this.setGlobalState(S.IN_BUFFER, inBuffer); // FIXME: currently causes infinite loop
+
+      // set selected
+      this.setGlobalState(S.SELECTED, e.features[0].properties); // the rest is handled by draw
+      e.preventDefault(); // only do this on the first point hit
+    }
+  }
+
+  draw(state) {
+    // console.log('map is drawing!', state);
+
+    if (state[S.SELECTED] !== null) {
+      const selectedData = state[S.SELECTED]
+      const point = turf.point([selectedData[K.LONG], selectedData[K.LAT]]);
+      const description = `
+        <h3>${selectedData[K.CAT]}: ${selectedData[K.NAME]}</h3> 
+        <h4> <b> Address: </b>${selectedData[K.FADD]}</h4> 
+        <h4> <b> Contact: </b>${selectedData[K.CONTACT_E]}</h4>
+        <h4> <b> Information: </b>${selectedData[K.INFO]}</h4>`;
+      this.selectPoint(point, description);
+    }
   }
 
   fitBounds(geojsonData) {

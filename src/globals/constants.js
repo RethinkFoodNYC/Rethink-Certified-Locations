@@ -1,18 +1,22 @@
-export const KEYS = {
-  CAT: 'Category',
-  LAT: 'Latitude',
-  LONG: 'Longitude',
-  INFO_test: 'Information',
-  NAME_test: 'Name',
-  INFO: 'What is your estimated kitchen square footage? ', // change this obv
+export const STATE = {
   IS_SIGNED_IN: 'isSignedIn',
   DATA: 'data',
   VISIBLE_IN_LIST: 'visibleInList',
   TOGGLE_ON: 'toggleOn',
   IN_BUFFER: 'inBuffer',
   SELECTED: 'selected',
-  // restaurant survey question fields:
+};
+
+export const KEYS = {
   TIME_STAMP: 'Timestamp',
+  CAT: 'Category',
+  NAME: 'Name',
+  CONTACT_E: 'Contact Email',
+  INFO: 'Information',
+  FADD: 'Formatted Address',
+  LAT: 'Latitude',
+  LONG: 'Longitude',
+  // restaurant survey question fields:
   EMAIL: 'Email Address',
   FIRST_NAME: 'First Name',
   LAST_NAME: 'Last Name',

@@ -1,38 +1,83 @@
 @import '../../styling/variables';
 
+$iconWidth: 30px;
+$rowHeight: 30px;
+
 #list {
-    font-family: sans-serif;
-    display: table-row;
-    position: absolute;
-    text-align: left;
-    border:1px solid #888;
-    padding: 1%;
-    top: 25px;
-    left: 5px;
-    width: 30%;
-    height: 90%;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: black;
-    //table-layout: fixed;
-    overflow: scroll;
-    white-space: nowrap;
+  font-family: $fontRegular;
+  position: absolute;
+  text-align: left;
+  top: 10%;
+  left: 25px;
+  width: 20%;
+  min-width: 250px;
+  height: 85%;
+  background-color: $colorBackground;
+  overflow: scroll; // maybe change to hidden
+  white-space: nowrap;
+  box-shadow:  0 0 8px 1px #ccc;
+  border-radius: 3px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+}
+
+.wrapper {
+  max-height: $rowHeight;
+  min-height: $rowHeight;
+  overflow: hidden;
+  transition: max-height 300ms;
+
+  &.isOpen {
+    max-height: 1000px;
+
+    .category::before{
+      transform: translateX(-25%) rotate(-90deg) ;
+
+    }
+    .category .name{
+      font-weight: 600;
+    }
   }
 
-.category{
-  color: black;
-  font-weight: bolder;
-  background-color: rgb(169, 203, 231);
+  .category{
+    padding: .5em;
+    border-bottom: $colorDisabled 1px solid;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+
+    &::before{
+      content: "";
+      width: $iconWidth;
+      height: 100%;
+      background-image: url("../../../assets/arrow.svg");
+      transform-origin: center;
+      transition: transform 200ms;
+    }
+
+    .count{
+      font-weight: 600;
+    }
+  }
+
+  .body {
+    padding: 0 $iconWidth;
+    height: 100%;
+    overflow: scroll;
+  }
 }
 
-.listItem{
-  color: black;
-  font-weight: normal;
-  background-color: white;
-}
-
-.listItem:not(.isOpen){
-  color: transparent;
-  line-height: 0px;
+.category, .listItem {
+  font-size: $fontSizeSmall;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden; // TODO: figure out how to get ellipse to work
+  border-bottom: $colorDisabled 1px solid;
+  height:$rowHeight;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
   .selected.inBuffer.isOpen{ // selected is always already inBuffer, so both must be called here
