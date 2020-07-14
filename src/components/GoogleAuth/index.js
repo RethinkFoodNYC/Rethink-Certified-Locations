@@ -32,6 +32,7 @@ export default class GoogleAuth {
     select('#google-buttons').selectAll('button')
       .data([{ text: 'Sign In', callback: this.handleAuthClick }, { text: 'Sign Out', callback: this.handleSignoutClick }])
       .join('button')
+      .attr('id', 'button')
       .text((d) => d.text)
       .on('click', (d) => d.callback());
   }
@@ -95,12 +96,12 @@ export default class GoogleAuth {
       // first element is column names
       const [cols, ...rows] = response.result.values;
       const parsed = rows.reduce((acc, row) => ([...acc,
-        row.reduce((obj, val, i) => ({
-          ...obj,
-          [cols[i]]: val,
-        }),
+      row.reduce((obj, val, i) => ({
+        ...obj,
+        [cols[i]]: val,
+      }),
         {})]),
-      []);
+        []);
 
       this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
     });

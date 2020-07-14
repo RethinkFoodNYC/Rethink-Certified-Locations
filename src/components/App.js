@@ -1,6 +1,7 @@
 import Mapbox from './Mapbox/index';
 import GoogleAuth from './GoogleAuth';
 import List from './List';
+import Header from './Header';
 import { STATE as S } from '../globals/constants';
 
 // global state
@@ -26,6 +27,7 @@ export default class App {
     this.googleAuth = new GoogleAuth(this.handleLogIn, this.handleLogOut);
     this.map = new Mapbox(this.setGlobalState, state);
     this.list = new List(this.setGlobalState);
+    this.header = new Header(this.setGlobalState);
   }
 
   // gets called once user has logged in
@@ -33,6 +35,7 @@ export default class App {
     // console.log('logged in with data', data)
     this.map.addData(data);
     this.list.addData(data);
+    this.header.addData(data); // TODO: once the user is signed in, update the header with their name
     this.setGlobalState(S.IS_SIGNED_IN, true);
     this.setGlobalState(S.DATA, data);
   }
