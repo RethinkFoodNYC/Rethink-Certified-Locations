@@ -1,5 +1,5 @@
 /** TYPOGRAPHY */
-$fontRegular: "sans-serif";
+$fontRegular: 'Montserrat', sans-serif;
 // $fontBold:;
 // $fontExtraBold:;
 // $fontLight:;
@@ -14,6 +14,9 @@ $fontSizeXXSmall: $fontSizeXSmall / $GOLDEN_RATIO;
 
 
 /** COLORS */
-$colorBackground: #eee;
+$colorBackground: #FEFFFF;
+$colorPrimary: #5CBBBF;
+$colorTextDark: #3D3D3E;
+$colorDisabled: #B3B4B5;
 
 /** SPACING */
