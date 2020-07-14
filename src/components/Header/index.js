@@ -1,20 +1,12 @@
 import './style.scss';
-import { select, event } from 'd3';
-
-const parent = select('#header');
-parent
-    .attr('class', 'header');
-
-parent
-    .append('div')
-    .attr('class', 'logo');
+import { select } from 'd3';
 
 export default class Header {
-    constructor(setGlobalState) {
-        this.setGlobalState = setGlobalState;
-    }
+    constructor() {
+        const parent = select('#header');
 
-    addData() {
-
+        parent
+            .append('div')
+            .attr('class', 'logo');
     }
 }

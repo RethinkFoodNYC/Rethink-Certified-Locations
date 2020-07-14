@@ -32,7 +32,7 @@ export default class GoogleAuth {
     select('#google-buttons').selectAll('button')
       .data([{ text: 'Sign In', callback: this.handleAuthClick }, { text: 'Sign Out', callback: this.handleSignoutClick }])
       .join('button')
-      .attr('id', 'button')
+      .attr('class', 'button')
       .text((d) => d.text)
       .on('click', (d) => d.callback());
   }

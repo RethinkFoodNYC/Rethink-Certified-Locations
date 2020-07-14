@@ -35,7 +35,6 @@ export default class App {
     // console.log('logged in with data', data)
     this.map.addData(data);
     this.list.addData(data);
-    this.header.addData(data); // TODO: once the user is signed in, update the header with their name
     this.setGlobalState(S.IS_SIGNED_IN, true);
     this.setGlobalState(S.DATA, data);
   }

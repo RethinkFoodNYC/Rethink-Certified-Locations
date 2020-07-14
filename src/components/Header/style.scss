@@ -2,9 +2,7 @@
 
 $rowHeight: 55px;
 
-
-
-.header {
+#header {
     font-family : $fontRegular;
     height: $rowHeight;
     z-index: 3;
@@ -13,32 +11,35 @@ $rowHeight: 55px;
     position: absolute;
     box-shadow:  0 0 6px 2px rgb(153, 153, 153);
 
+    .logo {
+        background-image: url("../../../assets/rethink-logo.png");
+        background-size: cover;
+        height: $rowHeight;
+        width: 140px;
+        position: absolute;
+        z-index: 4;
+    }
+
+    #google-buttons {
+        position: absolute;
+        right: 0px;
+        width: 15%;
+        max-width: 120px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    
+        .button {
+            margin: 1%;
+            font-family: inherit;
+            font-size: $fontSizeSmall;
+        }
+    }
 }
 
-.logo {
-    background-image: url("../../../assets/rethink-logo.png");
-    background-size: cover;
-    height: $rowHeight;
-    width: 140px;
-    position: absolute;
-    z-index: 4;
-}
 
-#google-buttons {
-    position: absolute;
-    right: 0px;
-    width: 15%;
-    max-width: 120px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    flex-direction: row;
 
-}
 
-#button {
-    margin: 1%;
-    font-family: inherit;
-    font-size: $fontSizeSmall;
-}
+
 
