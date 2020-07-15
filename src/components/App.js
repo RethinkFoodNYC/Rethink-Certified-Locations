@@ -35,8 +35,8 @@ export default class App {
     // console.log('logged in with data', data)
     this.map.addData(data);
     this.list.addData(data);
-    this.setGlobalState(S.IS_SIGNED_IN, true);
-    this.setGlobalState(S.DATA, data);
+    this.setGlobalState({ [S.IS_SIGNED_IN]: true });
+    this.setGlobalState({ [S.DATA]: data });
   }
 
   // gets called when a user signs out of app
@@ -44,13 +44,19 @@ export default class App {
     // console.log('logged out, removing data')
     this.map.removeData();
     this.list.removeData();
-    this.setGlobalState(S.IS_SIGNED_IN, false);
-    this.setGlobalState(S.DATA, []);
+    this.setGlobalState({ [S.IS_SIGNED_IN]: false });
+    this.setGlobalState({ [S.DATA]: [] });
   }
 
-  // UTILITY FUNCTION: state updating function that we pass to our components so that they are able to update our global state object
-  setGlobalState(key, data) {
-    state = { ...state, [key]: data };
+  /*
+  UTILITY FUNCTION: state updating function that we pass to our components
+  so that they are able to update our global state object
+  */
+  setGlobalState(newStateObj) {
+    state = {
+      ...state,
+      ...newStateObj,
+    };
     console.log('new state:', state);
     this.update();
   }
