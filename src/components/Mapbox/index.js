@@ -25,6 +25,7 @@ export default class Mapbox {
     this.setGlobalState = setGlobalState;
     this.data = state.data;
     this.BUFFER = 'buffer';
+    this.BUFFERLINE = 'buffer-outline';
   }
 
   initializeMap() {
@@ -71,7 +72,7 @@ export default class Mapbox {
   /** Gets called externally from app once a user has logged out */
   removeData() {
     // Part 1: remove all markers
-    this.markers.forEach((marker) => marker.remove())
+    this.markers.forEach((marker) => marker.remove());
     // part 2: remove all sources
     Object.values(this.S).forEach((source) => {
       if (this.map.getSource(source)) this.map.removeSource(source);
@@ -88,8 +89,17 @@ export default class Mapbox {
       type: 'fill',
       source: this.BUFFER,
       paint: {
-        'fill-color': 'blue',
-        'fill-opacity': 0.5,
+        'fill-color': '#5CBBBF', // $colorPrimary -- can this be a constant?
+        'fill-opacity': 0.3,
+      },
+    });
+    this.map.addLayer({
+      id: this.BUFFERLINE,
+      type: 'line',
+      source: this.BUFFER,
+      paint: {
+        'line-color': '#9b9e9f', // from Hermann's design
+        'line-dasharray': [2, 2],
       },
     });
   }
@@ -116,7 +126,7 @@ export default class Mapbox {
   showBuffer(vl, d) {
     const point = turf.point([vl.lng, vl.lat]);
     // create buffer
-    const buffered = buffer(point, 1, { units: 'miles' });
+    const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
     // set buffer
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
@@ -133,7 +143,7 @@ export default class Mapbox {
     // console.log('map is drawing!', state);
 
     if (state[S.SELECTED] !== null) {
-      const selectedData = state[S.SELECTED]
+      const selectedData = state[S.SELECTED];
       const point = turf.point([selectedData[K.LONG], selectedData[K.LAT]]);
       this.selectPoint(point);
     }
