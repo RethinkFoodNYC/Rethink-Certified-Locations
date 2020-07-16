@@ -95,14 +95,16 @@ export default class GoogleAuth {
     }).then((response) => {
       // first element is column names
       const [cols, ...rows] = response.result.values;
-      const parsed = rows.reduce((acc, row) => ([...acc,
-      row.reduce((obj, val, i) => ({
-        ...obj,
-        [cols[i]]: val,
-      }),
-        {})]),
-        []);
-
+      const parsed = rows
+        .reduce((acc, row) => ([...acc,
+          row.reduce((obj, val, i) => ({
+            ...obj,
+            [cols[i]]: val,
+          }),
+          {})]),
+        [])
+        // filter out any values without lat/long
+        .filter((row) => row[K.LAT] !== undefined && row[K.LONG] !== undefined);
       this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
     });
   }
