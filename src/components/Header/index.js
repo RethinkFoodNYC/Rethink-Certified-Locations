@@ -1,12 +1,14 @@
 import './style.scss';
-import { select } from 'd3';
+import { select, event } from 'd3';
+import { STATE as S } from '../../globals/constants';
 
 export default class Header {
-    constructor() {
+    constructor(state) {
         const parent = select('#header');
 
         parent
-            .append('div')
-            .attr('class', 'logo');
+            .append('a')
+            .attr('class', 'logo')
+            .attr('href', 'https://www.rethinkfood.nyc/');
     }
 }

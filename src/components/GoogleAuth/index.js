@@ -29,12 +29,18 @@ export default class GoogleAuth {
   }
 
   setupButtons() {
-    select('#google-buttons').selectAll('button')
-      .data([{ text: 'Sign In', callback: this.handleAuthClick }, { text: 'Sign Out', callback: this.handleSignoutClick }])
+    this.googleButton = select('#google-buttons').selectAll('button')
+      .data([{ text: 'Sign In', callback: this.handleAuthClick, class: 'signIn' }])
       .join('button')
-      .attr('class', 'button')
+      .attr('class', (d) => d.class)
       .text((d) => d.text)
       .on('click', (d) => d.callback());
+  }
+
+  changeButton(text, callback) {
+    this.googleButton
+      .text(text)
+      .on('click', () => callback());
   }
 
   /**
@@ -67,9 +73,11 @@ export default class GoogleAuth {
     if (isSignedIn) {
       console.log('signed In');
       this.pullData();
+      this.changeButton('Sign Out', this.handleSignoutClick);
     } else {
       console.log('signed out');
       this.onSignOut();
+      this.changeButton('Sign In', this.handleAuthClick);
     }
   }
 

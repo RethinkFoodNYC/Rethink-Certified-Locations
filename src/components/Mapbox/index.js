@@ -74,9 +74,9 @@ export default class Mapbox {
     // Part 1: remove all markers
     this.markers.forEach((marker) => marker.remove());
     // part 2: remove all sources
-    Object.values(this.S).forEach((source) => {
-      if (this.map.getSource(source)) this.map.removeSource(source);
-    });
+    // Object.values(this.S).forEach((source) => {
+    //   if (this.map.getSource(source)) this.map.removeSource(source);
+    // });
   }
 
   addBuffer() {
