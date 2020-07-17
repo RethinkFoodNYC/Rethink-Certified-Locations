@@ -25,6 +25,7 @@ export default class Mapbox {
     this.setGlobalState = setGlobalState;
     this.data = state.data;
     this.BUFFER = 'buffer';
+    this.BUFFERLINE = 'buffer-outline';
   }
 
   initializeMap() {
@@ -95,8 +96,17 @@ export default class Mapbox {
       type: 'fill',
       source: this.BUFFER,
       paint: {
-        'fill-color': 'blue',
-        'fill-opacity': 0.5,
+        'fill-color': '#5CBBBF', // $colorPrimary -- can this be a constant?
+        'fill-opacity': 0.3,
+      },
+    });
+    this.map.addLayer({
+      id: this.BUFFERLINE,
+      type: 'line',
+      source: this.BUFFER,
+      paint: {
+        'line-color': '#9b9e9f', // from Hermann's design
+        'line-dasharray': [2, 2],
       },
     });
   }
@@ -123,7 +133,7 @@ export default class Mapbox {
   showBuffer(coords) {
     const point = turf.point(coords);
     // create buffer
-    const buffered = buffer(point, 1, { units: 'miles' });
+    const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
     // set buffer
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
