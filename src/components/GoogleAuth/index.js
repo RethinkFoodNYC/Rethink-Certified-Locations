@@ -29,10 +29,13 @@ export default class GoogleAuth {
   }
 
   setupButtons() {
-    select('#google-buttons').selectAll('button')
-      .data([{ text: 'Sign In', callback: this.handleAuthClick }, { text: 'Sign Out', callback: this.handleSignoutClick }])
+    this.googleButtons = select('#google-buttons').selectAll('button')
+      .data([
+        { text: 'Sign In', callback: this.handleAuthClick, class: 'signIn' },
+        { text: 'Sign Out', callback: this.handleSignoutClick, class: 'signOut' }])
       .join('button')
-      .attr('class', 'button')
+      // hide both to start to avoid seeing both when loading sign in state
+      .attr('class', (d) => `hide ${d.class}`)
       .text((d) => d.text)
       .on('click', (d) => d.callback());
   }
@@ -66,9 +69,13 @@ export default class GoogleAuth {
   updateSigninStatus(isSignedIn) {
     if (isSignedIn) {
       console.log('signed In');
+      // flip buttons
+      this.googleButtons.classed('hide', (d) => d.class === 'signIn');
       this.pullData();
     } else {
       console.log('signed out');
+      // flip buttons
+      this.googleButtons.classed('hide', (d) => d.class === 'signOut');
       this.onSignOut();
     }
   }
