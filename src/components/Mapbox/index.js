@@ -46,26 +46,24 @@ export default class Mapbox {
     // flatten data to add all points to the geojson
     const flatData = data.map(([, layerData]) => layerData).flat();
 
-    this.markers = new Map(flatData.reduce((agg, d) => {
+    this.markers = new Map(flatData.map((d) => {
       const longLat = (d[K.LONG] !== undefined && d[K.LAT] !== undefined)
         ? [d[K.LONG], d[K.LAT]]
         : [0, 0];
       return [
-        ...agg,
-        [getUniqueID(d),
-          new mapboxgl.Marker({
-            color: colorLookup[d[K.CAT]],
-            scale: 0.5,
-          })
-            .setLngLat(longLat)
-            .setPopup(
-              new mapboxgl.Popup({ offset: 20 })
-                .setHTML(descriptionGenerator(d)),
-            )
-            .addTo(this.map),
-        ],
+        getUniqueID(d),
+        new mapboxgl.Marker({
+          color: colorLookup[d[K.CAT]],
+          scale: 0.5,
+        })
+          .setLngLat(longLat)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 20 })
+              .setHTML(descriptionGenerator(d)),
+          )
+          .addTo(this.map),
       ];
-    }, []));
+    }));
 
     // add hover behavior to each element
     this.markers.forEach((marker, _) => {
