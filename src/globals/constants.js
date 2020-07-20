@@ -1,8 +1,8 @@
 export const STATE = {
   IS_SIGNED_IN: 'isSignedIn',
   DATA: 'data',
-  VISIBLE_IN_LIST: 'visibleInList',
-  TOGGLE_ON: 'toggleOn',
+  VISIBLE_STATUS: 'visibleStatus',
+  TOGGLE_STATUS: 'toggleStatus',
   IN_BUFFER: 'inBuffer',
   SELECTED: 'selected',
 };
@@ -12,7 +12,7 @@ export const KEYS = {
   CAT: 'Category',
   NAME: 'Name',
   CONTACT_E: 'Contact Email',
-  INFO: 'Information',
+  INFO: 'Number of Meals',
   FADD: 'Formatted Address',
   LAT: 'Latitude',
   LONG: 'Longitude',

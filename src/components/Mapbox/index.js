@@ -1,9 +1,9 @@
-import { extent, select } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import turf from 'turf';
-import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
-import { KEYS as K, STATE as S } from '../../globals/constants';
+import { KEYS as K } from '../../globals/constants';
+import * as Sel from '../../selectors';
+import * as Act from '../../actions';
 import { getUniqueID } from '../../globals/helpers';
 
 import './style.scss';
@@ -12,7 +12,7 @@ const descriptionGenerator = (pointData) => `
   <span className="header ${pointData[K.CAT]}">${pointData[K.CAT]}: ${pointData[K.NAME]}</span> 
   <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
   <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
+  <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
 
 const colorLookup = { // TODO: make a color scale
   RRP: '#e629af',
@@ -20,10 +20,10 @@ const colorLookup = { // TODO: make a color scale
 };
 
 export default class Mapbox {
-  constructor(setGlobalState, state) {
+  constructor(store, globalUpdate) {
     this.initializeMap();
-    this.setGlobalState = setGlobalState;
-    this.data = state.data;
+    this.store = store;
+    this.globalUpdate = globalUpdate;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
   }
@@ -33,7 +33,7 @@ export default class Mapbox {
     this.map = new mapboxgl.Map({
       container: 'map', // container id
       style: process.env.MAPBOX_STYLE_URL, // stylesheet location
-      center: [-74.009914, 40.7440], // starting position, Hoboken (offset from NYC because of list view)
+      center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
 
@@ -43,34 +43,39 @@ export default class Mapbox {
   }
 
   /** Gets called externally from app once a user has logged in */
-  addData(data) {
-    // flatten data to add all points to the geojson
-    const flatData = data.map(([, layerData]) => layerData).flat();
+  addData() {
+    // get data from store
+    const flatData = Sel.getFlatData(this.store);
 
-    this.markers = new Map(flatData.map((d) => {
-      const longLat = (d[K.LONG] !== undefined && d[K.LAT] !== undefined)
-        ? [d[K.LONG], d[K.LAT]]
+    this.markers = new Map(flatData.map((dataPoint) => {
+      const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
+        ? [dataPoint[K.LONG], dataPoint[K.LAT]]
         : [0, 0];
       return [
-        getUniqueID(d),
-        new mapboxgl.Marker({
-          color: colorLookup[d[K.CAT]],
-          scale: 0.5,
-        })
-          .setLngLat(longLat)
-          .setPopup(
-            new mapboxgl.Popup({ offset: 20 })
-              .setHTML(descriptionGenerator(d)),
-          )
-          .addTo(this.map),
+        getUniqueID(dataPoint),
+        [
+          new mapboxgl.Marker({
+            color: colorLookup[dataPoint[K.CAT]],
+            scale: 0.5,
+          })
+            .setLngLat(longLat)
+            .setPopup(
+              new mapboxgl.Popup({ offset: 20 })
+                .setHTML(descriptionGenerator(dataPoint)),
+            )
+            .addTo(this.map),
+          dataPoint,
+        ], // returns a map structuring array from unique ID => [marker, data]
       ];
     }));
 
     // add hover behavior to each element
-    this.markers.forEach((marker, _) => {
+    this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
-      // TODO: click should select Point with data element
-      el.addEventListener('click', () => this.showBuffer(Object.values(marker._lngLat)));
+      el.addEventListener('click', () => {
+        this.store.dispatch(Act.setSelected(dataPoint));
+        this.globalUpdate();
+      });
       el.addEventListener('mouseenter', () => marker.togglePopup());
       el.addEventListener('mouseleave', () => marker.togglePopup());
     });
@@ -79,11 +84,12 @@ export default class Mapbox {
   /** Gets called externally from app once a user has logged out */
   removeData() {
     // Part 1: remove all markers
-    this.markers.forEach((marker, _) => marker.remove());
-    // part 2: remove all sources
-    // Object.values(this.S).forEach((source) => {
-    //   if (this.map.getSource(source)) this.map.removeSource(source);
-    // });
+    this.markers.forEach(([marker, data], uniqueID) => marker.remove());
+    // Part 2: remove all layers and sources (buffer)
+    ([this.BUFFERLINE, this.BUFFER]).forEach((d) => {
+      if (this.map.getLayer(d)) this.map.removeLayer(d);
+      if (this.map.getSource(d)) this.map.removeSource(d);
+    });
   }
 
   addBuffer() {
@@ -115,7 +121,7 @@ export default class Mapbox {
     const coordinates = [selected[K.LONG], selected[K.LAT]];
 
     // toggle popup
-    const marker = this.markers.get(getUniqueID(selected));
+    const [marker, _] = this.markers.get(getUniqueID(selected));
     marker.togglePopup();
 
     // add buffer
@@ -135,23 +141,27 @@ export default class Mapbox {
     // create buffer
     const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
-    // set buffer
-    const pointsWithin = pointsWithinPolygon(this.data, buffered);
-    // may make sense to use a unique id here instead TODO: update address field
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]);
-    // this.setGlobalState({
-    //   [S.IN_BUFFER]: inBuffer,
-    //   [S.SELECTED]: d,
-    // });
-    // the rest is handled by draw
   }
 
-  draw(state) {
-    // console.log('map is drawing!', state);
+  colorMarkers(inBuffer) {
+    // toggle off all outside of buffer
+    this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.toggle('hide'));
 
-    if (state[S.SELECTED] !== null) {
-      const selectedData = state[S.SELECTED];
-      this.selectPoint(selectedData);
+    // color in buffer
+    inBuffer.forEach((d) => {
+      const [marker, _] = this.markers.get(getUniqueID(d));
+      marker.getElement().classList.toggle('hide');
+    });
+  }
+
+  draw() {
+    // get state
+    const selectedPoint = Sel.getSelected(this.store);
+    const inBuffer = Sel.getInBuffer(this.store);
+
+    if (selectedPoint !== null) {
+      this.selectPoint(selectedPoint);
+      this.colorMarkers(inBuffer);
     }
   }
 
