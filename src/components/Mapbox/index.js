@@ -8,16 +8,16 @@ import { KEYS as K, STATE as S } from '../../globals/constants';
 
 import './style.scss';
 
-const descriptionGenerator = (pointData) => `
-  <span className="header ${pointData[K.CAT]}">${pointData[K.CAT]}: ${pointData[K.NAME]}</span> 
-  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
-
 const colorLookup = { // TODO: make a color scale
   RRP: '#e629af',
   CBOs: '#e38944',
 };
+
+const descriptionGenerator = (pointData) => `
+  <span className="header ${pointData[K.CAT]}" style="color:${colorLookup[pointData[K.CAT]]}"><b>${pointData[K.CAT]}: ${pointData[K.NAME]}</b></span> 
+  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
+  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
+  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
   constructor(setGlobalState, state) {
