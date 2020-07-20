@@ -1,10 +1,10 @@
 import { extent, select } from 'd3';
 import mapboxgl from 'mapbox-gl';
-import csv2geojson from 'csv2geojson';
 import turf from 'turf';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
 import { KEYS as K, STATE as S } from '../../globals/constants';
+import { getUniqueID } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -47,32 +47,39 @@ export default class Mapbox {
     // flatten data to add all points to the geojson
     const flatData = data.map(([, layerData]) => layerData).flat();
 
-    // use this array of markers to easily remove each one
-    this.markers = flatData.map((d) => {
-      // prevent undefined data points
+    this.markers = new Map(flatData.map((d) => {
       const longLat = (d[K.LONG] !== undefined && d[K.LAT] !== undefined)
         ? [d[K.LONG], d[K.LAT]]
         : [0, 0];
+      return [
+        getUniqueID(d),
+        new mapboxgl.Marker({
+          color: colorLookup[d[K.CAT]],
+          scale: 0.5,
+        })
+          .setLngLat(longLat)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 20 })
+              .setHTML(descriptionGenerator(d)),
+          )
+          .addTo(this.map),
+      ];
+    }));
 
-      // TODO: refactor to return an object of { pointUniqueID: markerElement } for enhanced selections from list
-      return new mapboxgl.Marker({
-        color: colorLookup[d[K.CAT]],
-        scale: 0.5,
-      })
-        .setLngLat(longLat)
-        .setPopup(
-          new mapboxgl.Popup({ offset: 20 })
-            .setHTML(descriptionGenerator(d))
-            .on('open', (e) => this.showBuffer(e.target._lngLat)),
-        )
-        .addTo(this.map);
+    // add hover behavior to each element
+    this.markers.forEach((marker, _) => {
+      const el = marker.getElement();
+      // TODO: click should select Point with data element
+      el.addEventListener('click', () => this.showBuffer(Object.values(marker._lngLat)));
+      el.addEventListener('mouseenter', () => marker.togglePopup());
+      el.addEventListener('mouseleave', () => marker.togglePopup());
     });
   }
 
   /** Gets called externally from app once a user has logged out */
   removeData() {
     // Part 1: remove all markers
-    this.markers.forEach((marker) => marker.remove());
+    this.markers.forEach((marker, _) => marker.remove());
     // part 2: remove all sources
     // Object.values(this.S).forEach((source) => {
     //   if (this.map.getSource(source)) this.map.removeSource(source);
@@ -104,15 +111,15 @@ export default class Mapbox {
     });
   }
 
-  selectPoint(point) {
-    // const { coordinates } = point.geometry;
-    const { coordinates } = [point[K.LONG], point[K.LAT]];
+  selectPoint(selected) {
+    const coordinates = [selected[K.LONG], selected[K.LAT]];
 
-    // add tooltip
-    // new mapboxgl.Popup()
-    //   .setLngLat(coordinates)
-    //   .setHTML(descriptionGenerator(point))
-    //   .addTo(this.map);
+    // toggle popup
+    const marker = this.markers.get(getUniqueID(selected));
+    marker.togglePopup();
+
+    // add buffer
+    this.showBuffer(coordinates);
 
     // zoom to point
     this.map.flyTo({
@@ -123,8 +130,8 @@ export default class Mapbox {
     });
   }
 
-  showBuffer(vl, d) {
-    const point = turf.point([vl.lng, vl.lat]);
+  showBuffer(coords) {
+    const point = turf.point(coords);
     // create buffer
     const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
@@ -132,10 +139,10 @@ export default class Mapbox {
     const pointsWithin = pointsWithinPolygon(this.data, buffered);
     // may make sense to use a unique id here instead TODO: update address field
     const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]);
-    this.setGlobalState({
-      [S.IN_BUFFER]: inBuffer,
-      [S.SELECTED]: d,
-    });
+    // this.setGlobalState({
+    //   [S.IN_BUFFER]: inBuffer,
+    //   [S.SELECTED]: d,
+    // });
     // the rest is handled by draw
   }
 
@@ -144,8 +151,7 @@ export default class Mapbox {
 
     if (state[S.SELECTED] !== null) {
       const selectedData = state[S.SELECTED];
-      const point = turf.point([selectedData[K.LONG], selectedData[K.LAT]]);
-      this.selectPoint(point);
+      this.selectPoint(selectedData);
     }
   }
 
