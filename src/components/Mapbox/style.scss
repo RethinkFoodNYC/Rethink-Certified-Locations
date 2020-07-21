@@ -20,7 +20,7 @@
     width: 250px;
   }
   
-  .mapboxgl-popup-content { // , .testClass {
+  .mapboxgl-popup-content {
     font: 400 14px/22px $fontRegular;
     width: 250px;
     max-height: 150px;
@@ -29,7 +29,7 @@
     overflow-wrap: break-word;
     hyphens: auto;
     padding: 10px 25px 15px 25px;
-    box-shadow: 0 0 8px .5px rgba(153, 153, 153) !important; // !important works better than adding class to Popup or specifying popup-anchor-bottom > content
+    box-shadow: 0 0 8px .5px rgba(153, 153, 153) !important;
   }
 
 }

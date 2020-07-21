@@ -65,7 +65,7 @@ export default class Mapbox {
         })
           .setLngLat(longLat)
           .setPopup(
-            new mapboxgl.Popup({ offset: 20 }) // , className: 'testClass' }) // this adds class to the whole popup (i.e. bounding the triangular tip), not just the content box
+            new mapboxgl.Popup({ offset: 20 })
               .setHTML(descriptionGenerator(d)),
           )
           .addTo(this.map),
@@ -75,7 +75,6 @@ export default class Mapbox {
     // add hover behavior to each element
     this.markers.forEach((marker, _) => {
       const el = marker.getElement();
-      // el.addClassName('testClass');
       // TODO: click should select Point with data element
       el.addEventListener('click', () => this.showBuffer(Object.values(marker._lngLat)));
       el.addEventListener('mouseenter', () => marker.togglePopup());
