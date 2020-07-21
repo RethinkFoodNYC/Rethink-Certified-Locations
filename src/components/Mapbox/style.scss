@@ -1,3 +1,6 @@
+@import '../../styling/variables';
+
+
 #map {
   position: absolute;
   top: 0;
@@ -7,28 +10,31 @@
 }
 
 /* Popup styling */
+
 .mapboxgl-popup {
-  padding-bottom: 5px;
+  padding-bottom: 5px; // floats entire popup above marker
+
+  .mapboxgl-popup-content span.header {
+    font: small-caps 200 22px $fontRegular;
+    padding: 0;
+    width: 250px;
+  }
+  
+  .mapboxgl-popup-content { // , .testClass {
+    font: 400 14px/22px $fontRegular;
+    width: 250px;
+    max-height: 150px;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    padding: 10px 25px 15px 25px;
+    box-shadow: 0 0 8px .5px rgba(153, 153, 153) !important; // !important works better than adding class to Popup or specifying popup-anchor-bottom > content
+  }
+
 }
 
-.mapboxgl-popup-content {
-  font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
-  padding: 0;
-  width: 250px;
+.mapboxgl-popup-tip { // styles triangular tip
+  height: 0px;
 }
-
-.mapboxgl-popup-content-wrapper {
-  padding: 1%;
-}
-
-.mapboxgl-container {
-  cursor: pointer;
-}
-
-.mapboxgl-popup-anchor-top>.mapboxgl-popup-content {
-  margin-top: 3px;
-}
-
-.mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
-  border-bottom-color: rgb(61, 59, 59);
-}
+ 

@@ -13,8 +13,14 @@ const colorLookup = { // TODO: make a color scale
   CBOs: '#e38944',
 };
 
+const catLookup = {
+  RRP: 'rrp',
+  CBOs: 'cbo', // apply small-caps formatting in CSS
+};
+
 const descriptionGenerator = (pointData) => `
-  <span className="header ${pointData[K.CAT]}" style="color:${colorLookup[pointData[K.CAT]]}"><b>${pointData[K.CAT]}: ${pointData[K.NAME]}</b></span> 
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${colorLookup[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
+  <br> <span> <b> ${pointData[K.NAME]}</b></span> 
   <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
   <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
   <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
@@ -59,7 +65,7 @@ export default class Mapbox {
         })
           .setLngLat(longLat)
           .setPopup(
-            new mapboxgl.Popup({ offset: 20 })
+            new mapboxgl.Popup({ offset: 20 }) // , className: 'testClass' }) // this adds class to the whole popup (i.e. bounding the triangular tip), not just the content box
               .setHTML(descriptionGenerator(d)),
           )
           .addTo(this.map),
@@ -69,6 +75,7 @@ export default class Mapbox {
     // add hover behavior to each element
     this.markers.forEach((marker, _) => {
       const el = marker.getElement();
+      // el.addClassName('testClass');
       // TODO: click should select Point with data element
       el.addEventListener('click', () => this.showBuffer(Object.values(marker._lngLat)));
       el.addEventListener('mouseenter', () => marker.togglePopup());
