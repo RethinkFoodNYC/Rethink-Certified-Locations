@@ -1,3 +1,5 @@
+import { getUniqueID } from '../globals/helpers';
+
 export const SET_SIGNED_IN = 'SET_SIGNED_IN';
 export const setSignedIn = (boolean) => ({
   type: SET_SIGNED_IN,
@@ -16,9 +18,16 @@ export const removeData = () => ({
 });
 
 export const SET_SELECTED = 'SET_SELECTED';
-export const setSelected = (data) => ({
+export const setSelected = (dataPoint) => ({
   type: SET_SELECTED,
-  data,
+  // data: dataPoint,
+  data: getUniqueID(dataPoint),
+});
+
+export const INIT_CATEGORIES = 'INIT_CATEGORIES';
+export const initCategories = (categories) => ({
+  type: INIT_CATEGORIES,
+  data: categories,
 });
 
 export const UPDATE_VISIBLE_STATUS = 'UPDATE_VISIBLE_STATUS';

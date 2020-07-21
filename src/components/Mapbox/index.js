@@ -156,13 +156,15 @@ export default class Mapbox {
 
   draw() {
     // get state
-    const selectedPoint = Sel.getSelected(this.store);
-    const inBuffer = Sel.getInBuffer(this.store);
+    // const selectedPoint = Sel.getSelected(this.store);
+    // console.log('sel point from map', Sel.getSelected(this.store));
+    // const inBuffer = Sel.getInBuffer(this.store);
+    // console.log(inBuffer)
 
-    if (selectedPoint !== null) {
-      this.selectPoint(selectedPoint);
-      this.colorMarkers(inBuffer);
-    }
+    // if (selectedPoint !== null) {
+      this.selectPoint(Sel.getSelected(this.store));
+      this.colorMarkers(Sel.getInBuffer(this.store));
+    // }
   }
 
   fitBounds(geojsonData) {

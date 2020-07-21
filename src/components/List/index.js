@@ -14,6 +14,11 @@ export default class List {
     // get data from store
     const data = Sel.getData(this.store);
 
+    // dynamically add all categories to store as "on"
+    this.store.dispatch(Act.initCategories(
+      data.map(([cat, _]) => cat),
+    ));
+
     const parent = select('#list');
 
     this.wrapper = parent

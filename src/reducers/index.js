@@ -19,6 +19,17 @@ export default function reducer(state = initialState, action) {
       return { ...state, [S.DATA]: [] };
     case A.SET_SELECTED:
       return { ...state, [S.SELECTED]: action.data };
+    case A.INIT_CATEGORIES: {
+      const obj = action.data.reduce((acc, cat) => ({
+        ...acc,
+        [cat]: true,
+      }), {});
+      return {
+        ...state,
+        [S.VISIBLE_STATUS]: obj,
+        [S.TOGGLE_STATUS]: obj,
+      };
+    }
     case A.UPDATE_VISIBLE_STATUS:
       return {
         ...state,

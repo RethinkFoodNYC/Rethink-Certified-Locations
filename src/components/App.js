@@ -3,13 +3,17 @@ import GoogleAuth from './GoogleAuth';
 import List from './List';
 import Header from './Header';
 import { STATE as S } from '../globals/constants';
+import * as Sel from '../selectors';
 import * as Act from '../actions';
 
 // initialize both components with data
 export default class App {
   constructor(store) {
     this.store = store;
-    store.subscribe(() => console.log('subscriber update:', store.getState()));
+    store.subscribe(() => {
+      console.log('subscriber update:', store.getState())
+      console.log('selected id update:', Sel.getSelectedUniqueID(this.store))
+    });
   }
 
   init() {
