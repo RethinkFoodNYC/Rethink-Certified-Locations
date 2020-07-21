@@ -21,7 +21,7 @@ export const getFlatDataMap = createSelector([
 export const getSelected = createSelector([
   getSelectedUniqueID,
   getFlatDataMap,
-], (selectedID, flatDataMap) => flatDataMap.get(selectedID));
+], (selectedID, flatDataMap) => flatDataMap.has(selectedID) ? flatDataMap.get(selectedID) : null);
 
 export const getInBuffer = createSelector([
   getFlatDataMap,
