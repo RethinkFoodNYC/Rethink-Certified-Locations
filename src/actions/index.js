@@ -20,7 +20,6 @@ export const removeData = () => ({
 export const SET_SELECTED = 'SET_SELECTED';
 export const setSelected = (dataPoint) => ({
   type: SET_SELECTED,
-  // data: dataPoint,
   data: getUniqueID(dataPoint),
 });
 

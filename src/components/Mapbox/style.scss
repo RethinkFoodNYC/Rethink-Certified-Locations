@@ -6,8 +6,10 @@
 
 }
 
-.hide {
-  opacity: 0.1;
+.hide > svg {
+  g {
+    fill: lightgrey;
+  }
 }
 
 /* Popup styling */

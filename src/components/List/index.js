@@ -1,4 +1,4 @@
-import { select, event } from 'd3';
+import { select } from 'd3';
 import './style.scss';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
@@ -12,7 +12,7 @@ export default class List {
 
   addData() {
     // get data from store
-    const data = Sel.getData(this.store);
+    const data = Sel.getData(this.store.getState());
 
     // dynamically add all categories to store as "on"
     this.store.dispatch(Act.initCategories(
@@ -61,11 +61,7 @@ export default class List {
   }
 
   draw() {
-    // console.log('list is drawing!', state);
-
-    // make selected BOLD *** if there is a selection
-    // this.listItems.classed('selected', (d) => (state.selected && state.selected[K.REST_ADDRESS] === d[K.REST_ADDRESS])); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
-    // this.listItems.classed('inBuffer', (d) => (state.inBuffer.includes(d[K.REST_ADDRESS])));
-    // this.listItems.classed('notInBuffer', (d) => (state.inBuffer.length !== 0 && !(state.inBuffer.includes(d[K.REST_ADDRESS]))));
+    const selected = Sel.getSelected(this.store.getState());
+    const inBuffer = Sel.getInBuffer(this.store.getState());
   }
 }

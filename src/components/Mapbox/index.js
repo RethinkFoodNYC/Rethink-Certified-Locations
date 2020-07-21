@@ -45,7 +45,7 @@ export default class Mapbox {
   /** Gets called externally from app once a user has logged in */
   addData() {
     // get data from store
-    const flatData = Sel.getFlatData(this.store);
+    const flatData = Sel.getFlatData(this.store.getState());
 
     this.markers = new Map(flatData.map((dataPoint) => {
       const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
@@ -145,26 +145,18 @@ export default class Mapbox {
 
   colorMarkers(inBuffer) {
     // toggle off all outside of buffer
-    this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.toggle('hide'));
+    this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.add('hide'));
 
     // color in buffer
     inBuffer.forEach((d) => {
       const [marker, _] = this.markers.get(getUniqueID(d));
-      marker.getElement().classList.toggle('hide');
+      marker.getElement().classList.remove('hide');
     });
   }
 
   draw() {
-    // get state
-    // const selectedPoint = Sel.getSelected(this.store);
-    // console.log('sel point from map', Sel.getSelected(this.store));
-    // const inBuffer = Sel.getInBuffer(this.store);
-    // console.log(inBuffer)
-
-    // if (selectedPoint !== null) {
-      this.selectPoint(Sel.getSelected(this.store));
-      this.colorMarkers(Sel.getInBuffer(this.store));
-    // }
+    this.selectPoint(Sel.getSelected(this.store.getState()));
+    this.colorMarkers(Sel.getInBuffer(this.store.getState()));
   }
 
   fitBounds(geojsonData) {

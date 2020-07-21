@@ -10,10 +10,7 @@ import * as Act from '../actions';
 export default class App {
   constructor(store) {
     this.store = store;
-    store.subscribe(() => {
-      console.log('subscriber update:', store.getState())
-      console.log('selected id update:', Sel.getSelectedUniqueID(this.store))
-    });
+    store.subscribe(() => console.log('subscriber update:', store.getState()));
   }
 
   init() {
