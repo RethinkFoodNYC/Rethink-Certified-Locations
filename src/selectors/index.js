@@ -34,6 +34,6 @@ export const getInBuffer = createSelector([
       selected[K.LONG],
       d[K.LAT],
       d[K.LONG],
-    ) < 1);
+    ) < 1).map((d) => getUniqueID(d));
   } else return [];
 });

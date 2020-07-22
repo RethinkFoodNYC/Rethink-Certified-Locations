@@ -171,7 +171,7 @@ export default class Mapbox {
 
       // color in buffer
       inBuffer.forEach((d) => {
-        const [marker, _] = this.markers.get(getUniqueID(d));
+        const [marker, _] = this.markers.get(d);
         marker.getElement().classList.remove('hide');
       });
     }
