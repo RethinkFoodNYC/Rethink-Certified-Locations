@@ -1,3 +1,4 @@
+import regeneratorRuntime from 'regenerator-runtime';
 import Mapbox from './Mapbox/index';
 import GoogleAuth from './GoogleAuth';
 import List from './List';
