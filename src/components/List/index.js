@@ -1,15 +1,23 @@
-import { select, event } from 'd3';
+import { select } from 'd3';
 import './style.scss';
+import * as Sel from '../../selectors';
+import * as Act from '../../actions';
 import { KEYS as K, STATE as S } from '../../globals/constants';
 
 export default class List {
-  constructor(setGlobalState) {
-    this.setGlobalState = setGlobalState;
+  constructor(store, globalUpdate) {
+    this.store = store;
+    this.globalUpdate = globalUpdate;
   }
 
-  addData(data) {
-    // console.log('data added to list');
-    // console.log('data', data);
+  addData() {
+    // get data from store
+    const data = Sel.getData(this.store.getState());
+
+    // dynamically add all categories to store as "on"
+    this.store.dispatch(Act.initCategories(
+      data.map(([cat, _]) => cat),
+    ));
 
     const parent = select('#list');
 
@@ -40,23 +48,20 @@ export default class List {
       .attr('class', 'listItem')
       .text((d) => d[K.NAME])
       .on('click', (d) => {
-        this.setGlobalState({ [S.SELECTED]: d });
+        this.store.dispatch(Act.setSelected(d));
+        this.globalUpdate();
       });
   }
 
-  removeData(data) {
+  removeData() {
     // console.log('data removed from list');
     if (this.wrapper) {
       this.wrapper.remove();
     }
   }
 
-  draw(state) {
-    // console.log('list is drawing!', state);
-
-    // make selected BOLD *** if there is a selection
-    // this.listItems.classed('selected', (d) => (state.selected && state.selected[K.REST_ADDRESS] === d[K.REST_ADDRESS])); // Address seems like a unique ID, but it may also make sense to have a concise key for each point
-    // this.listItems.classed('inBuffer', (d) => (state.inBuffer.includes(d[K.REST_ADDRESS])));
-    // this.listItems.classed('notInBuffer', (d) => (state.inBuffer.length !== 0 && !(state.inBuffer.includes(d[K.REST_ADDRESS]))));
+  draw() {
+    const selected = Sel.getSelected(this.store.getState());
+    const inBuffer = Sel.getInBuffer(this.store.getState());
   }
 }

@@ -6,6 +6,12 @@
 
 }
 
+.hide > svg {
+  g {
+    fill: lightgrey;
+  }
+}
+
 /* Popup styling */
 .mapboxgl-popup {
   padding-bottom: 5px;
