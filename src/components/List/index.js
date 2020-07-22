@@ -2,13 +2,8 @@ import { select, text } from 'd3';
 import './style.scss';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { KEYS as K } from '../../globals/constants';
+import { KEYS as K, COLORS } from '../../globals/constants';
 import { getUniqueID } from '../../globals/helpers';
-
-const colorLookup = { // TODO: make a color scale
-  RRP: '#e629af',
-  CBOs: '#e38944',
-};
 
 export default class List {
   constructor(store, globalUpdate) {
@@ -78,10 +73,10 @@ export default class List {
         .html(icon)
         .attr('width', '30px')
         .attr('height', '30px')
-        .style('stroke', (d) => colorLookup[d[K.CAT]]);
+        .style('stroke', (d) => COLORS[d[K.CAT]]);
 
       iconG.select('.map-point')
-        .style('fill', (d) => colorLookup[d[K.CAT]]);
+        .style('fill', (d) => COLORS[d[K.CAT]]);
     });
   }
 
