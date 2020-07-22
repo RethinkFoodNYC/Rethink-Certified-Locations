@@ -7,6 +7,11 @@ export const STATE = {
   SELECTED: 'selected',
 };
 
+export const COLORS = {
+  RRP: '#e629af',
+  CBOs: '#e38944',
+};
+
 export const KEYS = {
   TIME_STAMP: 'Timestamp',
   CAT: 'Category',

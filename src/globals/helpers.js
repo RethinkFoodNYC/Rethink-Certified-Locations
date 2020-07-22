@@ -1,7 +1,7 @@
 import { KEYS as K } from './constants';
 
 export function getUniqueID(data) {
-  return `${data[K.NAME]}_${data[K.LONG]}_${data[K.LAT]}`
+  return `${data[K.NAME].replace(/\s/g, '')}_${data[K.LONG]}_${data[K.LAT]}`
 }
 
 // source of below: https://www.geodatasource.com/developers/javascript

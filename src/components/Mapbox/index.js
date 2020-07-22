@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import turf from 'turf';
 import buffer from '@turf/buffer';
-import { KEYS as K } from '../../globals/constants';
+import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { getUniqueID } from '../../globals/helpers';
@@ -14,10 +14,7 @@ const descriptionGenerator = (pointData) => `
   <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
   <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
 
-const colorLookup = { // TODO: make a color scale
-  RRP: '#e629af',
-  CBOs: '#e38944',
-};
+const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
 export default class Mapbox {
   constructor(store, globalUpdate) {
@@ -40,6 +37,14 @@ export default class Mapbox {
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
     });
+
+    this.map.on('click', (e) => {
+      // if you click on the canvas instead of a path/marker
+      if (e.originalEvent.target.className === 'mapboxgl-canvas') {
+        this.store.dispatch(Act.setSelected(null));
+        this.globalUpdate();
+      }
+    });
   }
 
   /** Gets called externally from app once a user has logged in */
@@ -55,7 +60,7 @@ export default class Mapbox {
         getUniqueID(dataPoint),
         [
           new mapboxgl.Marker({
-            color: colorLookup[dataPoint[K.CAT]],
+            color: COLORS[dataPoint[K.CAT]],
             scale: 0.5,
           })
             .setLngLat(longLat)
@@ -95,7 +100,7 @@ export default class Mapbox {
   addBuffer() {
     this.map.addSource(
       this.BUFFER,
-      { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } },
+      { type: 'geojson', data: emptyBufferData },
     );
     this.map.addLayer({
       id: this.BUFFER,
@@ -118,22 +123,26 @@ export default class Mapbox {
   }
 
   selectPoint(selected) {
-    const coordinates = [selected[K.LONG], selected[K.LAT]];
+    if (selected === null) {
+      this.clearBuffer();
+    } else {
+      const coordinates = [selected[K.LONG], selected[K.LAT]];
 
-    // toggle popup
-    const [marker, _] = this.markers.get(getUniqueID(selected));
-    marker.togglePopup();
+      // toggle popup
+      const [marker, _] = this.markers.get(getUniqueID(selected));
+      marker.togglePopup();
 
-    // add buffer
-    this.showBuffer(coordinates);
+      // add buffer
+      this.showBuffer(coordinates);
 
-    // zoom to point
-    this.map.flyTo({
-      center: coordinates, // this should be offset on the longitude/y dimension
-      // since the list view now hides the left part of the window
-      zoom: 12,
-      speed: 0.25,
-    });
+      // zoom to point
+      this.map.flyTo({
+        center: coordinates, // this should be offset on the longitude/y dimension
+        // since the list view now hides the left part of the window
+        zoom: 12,
+        speed: 0.25,
+      });
+    }
   }
 
   showBuffer(coords) {
@@ -143,15 +152,24 @@ export default class Mapbox {
     this.map.getSource(this.BUFFER).setData(buffered);
   }
 
-  colorMarkers(inBuffer) {
-    // toggle off all outside of buffer
-    this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.add('hide'));
+  clearBuffer() {
+    this.map.getSource(this.BUFFER).setData(emptyBufferData);
+  }
 
-    // color in buffer
-    inBuffer.forEach((d) => {
-      const [marker, _] = this.markers.get(getUniqueID(d));
-      marker.getElement().classList.remove('hide');
-    });
+  colorMarkers(inBuffer) {
+    // show all if there is no buffer
+    if (inBuffer.length === 0) {
+      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.remove('hide'));
+    } else {
+      // toggle off all outside of buffer
+      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.add('hide'));
+
+      // color in buffer
+      inBuffer.forEach((d) => {
+        const [marker, _] = this.markers.get(d);
+        marker.getElement().classList.remove('hide');
+      });
+    }
   }
 
   draw() {
