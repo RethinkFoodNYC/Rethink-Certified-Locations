@@ -9,6 +9,13 @@ export default class List {
   constructor(store, globalUpdate) {
     this.store = store;
     this.globalUpdate = globalUpdate;
+    this.loadIcon();
+  }
+
+  async loadIcon() {
+    // source: https://github.com/parcel-bundler/parcel/issues/4222
+    const iconPath = require('url:../../../assets/icon.svg')
+    this.icon = await text(iconPath);
   }
 
   addData() {
@@ -19,9 +26,6 @@ export default class List {
     this.store.dispatch(Act.initCategories(
       data.map(([cat, _]) => cat),
     ));
-
-    // source: https://github.com/parcel-bundler/parcel/issues/4222
-    const iconPath = require('url:../../../assets/icon.svg')
 
     const parent = select('#list');
 
@@ -66,18 +70,14 @@ export default class List {
         this.globalUpdate();
       });
 
-    // read the svg text from the icon path then set it as the HTML in the svg
-    text(iconPath).then((icon) => {
-      const iconG = this.listItems
-        .select('.listItemIcon')
-        .html(icon)
-        .attr('width', '30px')
-        .attr('height', '30px')
-        .style('stroke', (d) => COLORS[d[K.CAT]]);
-
-      iconG.select('.map-point')
-        .style('fill', (d) => COLORS[d[K.CAT]]);
-    });
+    this.listItems
+      .select('.listItemIcon')
+      .html(this.icon)
+      .attr('width', '30px')
+      .attr('height', '30px')
+      .style('stroke', (d) => COLORS[d[K.CAT]])
+      .select('.map-point')
+      .style('fill', (d) => COLORS[d[K.CAT]]);
   }
 
   removeData() {
@@ -93,20 +93,7 @@ export default class List {
 
     // add in buffer and selected classes for styling
     this.listItems
-      .filter((d) => inBuffer.includes(getUniqueID(d)))
-      .classed('inBuffer', true);
-
-    this.listItems
-      .filter((d) => selected === getUniqueID(d))
-      .classed('selected', true);
-
-    // remove old classes if they exist
-    this.listItems
-      .filter((d) => !inBuffer.includes(getUniqueID(d)))
-      .classed('inBuffer', false);
-
-    this.listItems
-      .filter((d) => selected !== getUniqueID(d))
-      .classed('selected', false);
+      .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
+      .classed('selected', (d) => selected === getUniqueID(d));
   }
 }
