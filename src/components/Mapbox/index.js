@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import turf from 'turf';
 import buffer from '@turf/buffer';
-import { KEYS as K } from '../../globals/constants';
+import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { getUniqueID } from '../../globals/helpers';
@@ -13,11 +13,6 @@ const descriptionGenerator = (pointData) => `
   <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
   <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
   <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
-
-const colorLookup = { // TODO: make a color scale
-  RRP: '#e629af',
-  CBOs: '#e38944',
-};
 
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
@@ -65,7 +60,7 @@ export default class Mapbox {
         getUniqueID(dataPoint),
         [
           new mapboxgl.Marker({
-            color: colorLookup[dataPoint[K.CAT]],
+            color: COLORS[dataPoint[K.CAT]],
             scale: 0.5,
           })
             .setLngLat(longLat)
@@ -136,10 +131,10 @@ export default class Mapbox {
       // toggle popup
       const [marker, _] = this.markers.get(getUniqueID(selected));
       marker.togglePopup();
-  
+
       // add buffer
       this.showBuffer(coordinates);
-  
+
       // zoom to point
       this.map.flyTo({
         center: coordinates, // this should be offset on the longitude/y dimension
@@ -171,7 +166,7 @@ export default class Mapbox {
 
       // color in buffer
       inBuffer.forEach((d) => {
-        const [marker, _] = this.markers.get(getUniqueID(d));
+        const [marker, _] = this.markers.get(d);
         marker.getElement().classList.remove('hide');
       });
     }

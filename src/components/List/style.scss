@@ -28,11 +28,15 @@ $rowHeight: 30px;
   overflow: hidden;
   transition: max-height 300ms;
 
+  .category::before {
+    transform: translateY(-15%) translateX(-20%) rotate(-90deg);
+  }
+
   &.isOpen {
     max-height: 1000px;
 
     .category::before{
-      transform: translateX(-25%) rotate(-90deg) ;
+      transform: translateY(-15%) translateX(0%) 
 
     }
     .category .name{
@@ -62,39 +66,61 @@ $rowHeight: 30px;
   }
 
   .body {
-    padding: 0 $iconWidth;
+    padding: 0 $iconWidth 0 0;
     height: 100%;
     overflow: scroll;
   }
 }
 
-.category, .listItem {
+.category, .listItem, .listItemRow {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
   overflow: hidden; // TODO: figure out how to get ellipse to work
-  border-bottom: $colorDisabled 1px solid;
   height:$rowHeight;
   cursor: pointer;
   display: flex;
   align-items: center;
 }
 
-  .selected.inBuffer.isOpen{ // selected is always already inBuffer, so both must be called here
-    font-weight: bold;
-    color: orange;
-    height: 20px;
-  }
+.listItem, .category {
+  border-bottom: $colorDisabled 1px solid;
+}
 
-  .inBuffer.isOpen{
-    color: black;
-    overflow: hidden;
-    height: 20px;
+.listItemIcon {
+  width: $iconWidth;
+  padding: 5px;
+  path.map-point, path.circle {
+    opacity: 0;
   }
+}
 
-  .notInBuffer.isOpen {
-    color: transparent;
-    overflow: hidden;
-    line-height: 0px;
+.inBuffer {
+  span {
+    font-weight: 700;
   }
+  path.map-point {
+    opacity: 1;
+    fill-opacity: 0;
+    stroke-width: 1.5;
+  }
+  path.circle {
+    opacity: 1;
+    stroke-width: 1.5;
+  }
+}
 
+.selected {
+  span {
+    font-weight: 700;
+  }
+  path.map-point {
+    opacity: 1;
+    fill-opacity: 1;
+    stroke-width: 0;
+  }
+  path.circle {
+    opacity: 1;
+    stroke-width: 0;
+  }
+}
