@@ -43,7 +43,7 @@ export default function reducer(state = initialState, action) {
         ...state,
         [S.TOGGLE_STATUS]: {
           ...state[S.TOGGLE_STATUS],
-          [action.category]: action.status,
+          [action.category]: !state[S.TOGGLE_STATUS][action.category],
         },
       };
     default:

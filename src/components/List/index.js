@@ -2,7 +2,7 @@ import { select, text } from 'd3';
 import './style.scss';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { KEYS as K, COLORS } from '../../globals/constants';
+import { KEYS as K, COLORS, STATE as S } from '../../globals/constants';
 import { getUniqueID } from '../../globals/helpers';
 
 export default class List {
@@ -14,7 +14,7 @@ export default class List {
 
   async loadIcon() {
     // source: https://github.com/parcel-bundler/parcel/issues/4222
-    const iconPath = require('url:../../../assets/icon.svg')
+    const iconPath = require('url:../../../assets/icon.svg');
     this.icon = await text(iconPath);
   }
 
@@ -35,15 +35,37 @@ export default class List {
       .join('div')
       .attr('class', 'wrapper');
 
-    this.category = this.wrapper
+    this.categoryRow = this.wrapper
+      .selectAll('div.categoryRow')
+      .data((d) => [d])
+      .join('div')
+      .attr('class', 'categoryRow');
+
+    this.category = this.categoryRow
       .selectAll('div.category')
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([name, items]) => `<span><span class="name">${name}</span> <span class="count">(${items.length})</span></span>`)
+      .html(([name, items]) => `<span><span class="name">${name}</span> <span class="count">(${items.length})</span> `)
       .on('click', function () {
-        this.parentNode.classList.toggle('isOpen');
+        this.parentNode.parentNode.classList.toggle('isOpen');
       });
+
+    this.toggle = this.categoryRow
+      .selectAll('div.toggle')
+      .data((d) => [d])
+      .join('div') // TODO: position within wrapper to right side, not below
+      .attr('class', 'toggle')
+      .html(([name]) => `<label class="switch">
+         <input type="checkbox" id=${name} checked>
+            <span class="slider round"></span>
+         </label></span>`)
+      .on('click', ([name]) => {
+        this.store.dispatch(Act.updateToggle(name)); // is there a simple way to say "toggle" this on/off
+        this.globalUpdate();
+      })
+      .select('span.slider')
+      .style('background-color', ([name]) => COLORS[name]);
 
     this.body = this.wrapper
       .append('div')
@@ -90,10 +112,14 @@ export default class List {
   draw() {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
+    const toggleStatus = Sel.getToggleStatus(this.store.getState());
+    // console.log(toggleStatus);
 
     // add in buffer and selected classes for styling
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
+    // this.toggle
+    //   .classed('checked', toggleStatus === 'true');
   }
 }
