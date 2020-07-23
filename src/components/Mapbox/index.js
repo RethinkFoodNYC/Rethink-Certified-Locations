@@ -1,17 +1,15 @@
-import { extent, select } from 'd3';
 import mapboxgl from 'mapbox-gl';
 import turf from 'turf';
-import pointsWithinPolygon from '@turf/points-within-polygon';
 import buffer from '@turf/buffer';
-import { KEYS as K, STATE as S } from '../../globals/constants';
+import { KEYS as K, COLORS } from '../../globals/constants';
+import * as Sel from '../../selectors';
+import * as Act from '../../actions';
 import { getUniqueID } from '../../globals/helpers';
 
 import './style.scss';
 
-const colorLookup = { // TODO: make a color scale
-  RRP: '#e629af',
-  CBOs: '#e38944',
-};
+
+const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
 const catLookup = {
   RRP: 'rrp',
@@ -19,17 +17,17 @@ const catLookup = {
 };
 
 const descriptionGenerator = (pointData) => `
-  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${colorLookup[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
   <br> <span> <b> ${pointData[K.NAME]}</b></span> 
   <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
   <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
   <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
-  constructor(setGlobalState, state) {
+  constructor(store, globalUpdate) {
     this.initializeMap();
-    this.setGlobalState = setGlobalState;
-    this.data = state.data;
+    this.store = store;
+    this.globalUpdate = globalUpdate;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
   }
@@ -39,44 +37,57 @@ export default class Mapbox {
     this.map = new mapboxgl.Map({
       container: 'map', // container id
       style: process.env.MAPBOX_STYLE_URL, // stylesheet location
-      center: [-74.009914, 40.7440], // starting position, Hoboken (offset from NYC because of list view)
+      center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
     });
+
+    this.map.on('click', (e) => {
+      // if you click on the canvas instead of a path/marker
+      if (e.originalEvent.target.className === 'mapboxgl-canvas') {
+        this.store.dispatch(Act.setSelected(null));
+        this.globalUpdate();
+      }
+    });
   }
 
   /** Gets called externally from app once a user has logged in */
-  addData(data) {
-    // flatten data to add all points to the geojson
-    const flatData = data.map(([, layerData]) => layerData).flat();
+  addData() {
+    // get data from store
+    const flatData = Sel.getFlatData(this.store.getState());
 
-    this.markers = new Map(flatData.map((d) => {
-      const longLat = (d[K.LONG] !== undefined && d[K.LAT] !== undefined)
-        ? [d[K.LONG], d[K.LAT]]
+    this.markers = new Map(flatData.map((dataPoint) => {
+      const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
+        ? [dataPoint[K.LONG], dataPoint[K.LAT]]
         : [0, 0];
       return [
-        getUniqueID(d),
-        new mapboxgl.Marker({
-          color: colorLookup[d[K.CAT]],
-          scale: 0.5,
-        })
-          .setLngLat(longLat)
-          .setPopup(
-            new mapboxgl.Popup({ offset: 20 })
-              .setHTML(descriptionGenerator(d)),
-          )
-          .addTo(this.map),
+        getUniqueID(dataPoint),
+        [
+          new mapboxgl.Marker({
+            color: COLORS[dataPoint[K.CAT]],
+            scale: 0.5,
+          })
+            .setLngLat(longLat)
+            .setPopup(
+              new mapboxgl.Popup({ offset: 20 })
+                .setHTML(descriptionGenerator(dataPoint)),
+            )
+            .addTo(this.map),
+          dataPoint,
+        ], // returns a map structuring array from unique ID => [marker, data]
       ];
     }));
 
     // add hover behavior to each element
-    this.markers.forEach((marker, _) => {
+    this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
-      // TODO: click should select Point with data element
-      el.addEventListener('click', () => this.showBuffer(Object.values(marker._lngLat)));
+      el.addEventListener('click', () => {
+        this.store.dispatch(Act.setSelected(dataPoint));
+        this.globalUpdate();
+      });
       el.addEventListener('mouseenter', () => marker.togglePopup());
       el.addEventListener('mouseleave', () => marker.togglePopup());
     });
@@ -85,17 +96,18 @@ export default class Mapbox {
   /** Gets called externally from app once a user has logged out */
   removeData() {
     // Part 1: remove all markers
-    this.markers.forEach((marker, _) => marker.remove());
-    // part 2: remove all sources
-    // Object.values(this.S).forEach((source) => {
-    //   if (this.map.getSource(source)) this.map.removeSource(source);
-    // });
+    this.markers.forEach(([marker, data], uniqueID) => marker.remove());
+    // Part 2: remove all layers and sources (buffer)
+    ([this.BUFFERLINE, this.BUFFER]).forEach((d) => {
+      if (this.map.getLayer(d)) this.map.removeLayer(d);
+      if (this.map.getSource(d)) this.map.removeSource(d);
+    });
   }
 
   addBuffer() {
     this.map.addSource(
       this.BUFFER,
-      { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } },
+      { type: 'geojson', data: emptyBufferData },
     );
     this.map.addLayer({
       id: this.BUFFER,
@@ -118,22 +130,26 @@ export default class Mapbox {
   }
 
   selectPoint(selected) {
-    const coordinates = [selected[K.LONG], selected[K.LAT]];
+    if (selected === null) {
+      this.clearBuffer();
+    } else {
+      const coordinates = [selected[K.LONG], selected[K.LAT]];
 
-    // toggle popup
-    const marker = this.markers.get(getUniqueID(selected));
-    marker.togglePopup();
+      // toggle popup
+      const [marker, _] = this.markers.get(getUniqueID(selected));
+      marker.togglePopup();
 
-    // add buffer
-    this.showBuffer(coordinates);
+      // add buffer
+      this.showBuffer(coordinates);
 
-    // zoom to point
-    this.map.flyTo({
-      center: coordinates, // this should be offset on the longitude/y dimension
-      // since the list view now hides the left part of the window
-      zoom: 12,
-      speed: 0.25,
-    });
+      // zoom to point
+      this.map.flyTo({
+        center: coordinates, // this should be offset on the longitude/y dimension
+        // since the list view now hides the left part of the window
+        zoom: 12,
+        speed: 0.25,
+      });
+    }
   }
 
   showBuffer(coords) {
@@ -141,24 +157,31 @@ export default class Mapbox {
     // create buffer
     const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
-    // set buffer
-    const pointsWithin = pointsWithinPolygon(this.data, buffered);
-    // may make sense to use a unique id here instead TODO: update address field
-    const inBuffer = pointsWithin.features.map(({ properties }) => properties[[K.FADD]]);
-    // this.setGlobalState({
-    //   [S.IN_BUFFER]: inBuffer,
-    //   [S.SELECTED]: d,
-    // });
-    // the rest is handled by draw
   }
 
-  draw(state) {
-    // console.log('map is drawing!', state);
+  clearBuffer() {
+    this.map.getSource(this.BUFFER).setData(emptyBufferData);
+  }
 
-    if (state[S.SELECTED] !== null) {
-      const selectedData = state[S.SELECTED];
-      this.selectPoint(selectedData);
+  colorMarkers(inBuffer) {
+    // show all if there is no buffer
+    if (inBuffer.length === 0) {
+      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.remove('hide'));
+    } else {
+      // toggle off all outside of buffer
+      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.add('hide'));
+
+      // color in buffer
+      inBuffer.forEach((d) => {
+        const [marker, _] = this.markers.get(d);
+        marker.getElement().classList.remove('hide');
+      });
     }
+  }
+
+  draw() {
+    this.selectPoint(Sel.getSelected(this.store.getState()));
+    this.colorMarkers(Sel.getInBuffer(this.store.getState()));
   }
 
   fitBounds(geojsonData) {

@@ -1,4 +1,6 @@
 import './style.scss';
 import App from './src/components/App';
+import configureStore from './src/store';
 
-new App().init();
+const store = configureStore();
+new App(store).init();

@@ -9,6 +9,12 @@
 
 }
 
+.hide > svg {
+  g {
+    fill: lightgrey;
+  }
+}
+
 /* Popup styling */
 
 .mapboxgl-popup {
