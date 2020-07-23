@@ -8,13 +8,20 @@ import { getUniqueID } from '../../globals/helpers';
 
 import './style.scss';
 
-const descriptionGenerator = (pointData) => `
-  <span className="header ${pointData[K.CAT]}">${pointData[K.CAT]}: ${pointData[K.NAME]}</span> 
-  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
 
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
+
+const catLookup = {
+  RRP: 'rrp',
+  CBOs: 'cbo', // apply small-caps formatting in CSS
+};
+
+const descriptionGenerator = (pointData) => `
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
+  <br> <span> <b> ${pointData[K.NAME]}</b></span> 
+  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
+  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
+  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
   constructor(store, globalUpdate) {
