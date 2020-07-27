@@ -54,17 +54,26 @@ export default class List {
     this.toggle = this.categoryRow
       .selectAll('div.toggle')
       .data((d) => [d])
-      .join('div') // TODO: position within wrapper to right side, not below
-      .attr('class', 'toggle')
-      .html(([name]) => `<label class="switch">
-         <input type="checkbox" id=${name} checked>
-            <span class="slider round"></span>
-         </label></span>`)
-      .on('click', ([name]) => {
-        this.store.dispatch(Act.updateToggle(name)); // is there a simple way to say "toggle" this on/off
-        this.globalUpdate();
-      })
-      .select('span.slider')
+      .join('div')
+      .attr('class', 'toggle');
+
+    const switchEl = this.toggle
+      .selectAll('label.switch')
+      .data((d) => [d])
+      .join('label')
+      .attr('class', 'switch');
+
+    switchEl
+      .selectAll('input')
+      .data((d) => [d])
+      .join('input')
+      .attr('type', 'checkbox')
+      .attr('id', ([name]) => name)
+      .on('click', ([name]) => this.toggleCategory(name));
+
+    switchEl
+      .append('span')
+      .attr('class', 'slider round')
       .style('background-color', ([name]) => COLORS[name]);
 
     this.body = this.wrapper
@@ -102,6 +111,11 @@ export default class List {
       .style('fill', (d) => COLORS[d[K.CAT]]);
   }
 
+  toggleCategory(name) {
+    this.store.dispatch(Act.updateToggle(name));
+    this.globalUpdate();
+  }
+
   removeData() {
     // console.log('data removed from list');
     if (this.wrapper) {
@@ -119,7 +133,5 @@ export default class List {
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
-    // this.toggle
-    //   .classed('checked', toggleStatus === 'true');
   }
 }

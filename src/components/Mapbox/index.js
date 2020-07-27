@@ -181,8 +181,7 @@ export default class Mapbox {
 
   toggleVisibility(status) {
     // map over markers and turn off / on according to toggle
-    console.log('status', status);
-    this.markers.forEach(([marker, data], uniqueID) => select(marker.getElement()).classed('hide', status[data[K.CAT]]));
+    this.markers.forEach(([marker, data], uniqueID) => select(marker.getElement()).classed('off', !status[data[K.CAT]]));
   }
 
   draw() {
