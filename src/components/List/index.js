@@ -1,4 +1,4 @@
-import { select, text } from 'd3';
+import { select, text, format } from 'd3';
 import './style.scss';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
@@ -109,6 +109,14 @@ export default class List {
       .style('stroke', (d) => COLORS[d[K.CAT]])
       .select('.map-point')
       .style('fill', (d) => COLORS[d[K.CAT]]);
+
+    // placeholder for distance that comes later
+    this.listItemDistance = this.listItems
+      .append('div')
+      .attr('class', 'listItemDistance')
+      .attr('width', '60px')
+      .attr('height', '60px')
+      .attr('class', 'listItemDistance');
   }
 
   toggleCategory(name) {
@@ -127,11 +135,16 @@ export default class List {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
+    const distances = Sel.getDistances(this.store.getState());
     // console.log(toggleStatus);
 
     // add in buffer and selected classes for styling
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
+    if (distances !== null) {
+      this.listItemDistance
+        .text((d) => format('.1f')(distances.get(getUniqueID(d)))); // TODO: update distance div to blank text when nothing is selected
+    }
   }
 }

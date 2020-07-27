@@ -21,19 +21,31 @@ export const getFlatDataMap = createSelector([
 export const getSelected = createSelector([
   getSelectedUniqueID,
   getFlatDataMap,
-], (selectedID, flatDataMap) => flatDataMap.has(selectedID) ? flatDataMap.get(selectedID) : null);
+], (selectedID, flatDataMap) => (flatDataMap.has(selectedID) ? flatDataMap.get(selectedID) : null));
 
-export const getInBuffer = createSelector([
-  getFlatDataMap,
-  getSelectedUniqueID,
-], (flatDataMap, selectedID) => {
-  if (flatDataMap.has(selectedID)) {
-    const selected = flatDataMap.get(selectedID);
-    return (Array.from(flatDataMap.values())).filter((d) => distance(
+export const getDistances = createSelector([
+  getSelectedUniqueID, getFlatDataMap,
+], (selectedID, flatDataMap) => {
+  if (selectedID === null) {
+    return null;
+  }
+  const selected = flatDataMap.get(selectedID);
+  return new Map(Array.from(flatDataMap.entries()).map(([uniqueID, d]) => {
+    const dist = distance(
       selected[K.LAT],
       selected[K.LONG],
       d[K.LAT],
       d[K.LONG],
-    ) < 1).map((d) => getUniqueID(d));
-  } else return [];
+    );
+    return [uniqueID, dist];
+  }));
+});
+
+export const getInBuffer = createSelector([
+  getDistances,
+], (distanceMap) => {
+  if (distanceMap === null) {
+    return [];
+  }
+  return Array.from(distanceMap.entries()).filter(([uniqueID, dist]) => dist < 1).map(([uniqueID, dist]) => uniqueID);
 });
