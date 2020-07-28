@@ -1,5 +1,6 @@
 import { select, text, format } from 'd3';
 import './style.scss';
+import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS, STATE as S } from '../../globals/constants';
@@ -142,9 +143,18 @@ export default class List {
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
+
+    // add distance to list and sort in ascending order from selected point; remove distance when no point is selected
     if (distances !== null) {
       this.listItemDistance
-        .text((d) => format('.1f')(distances.get(getUniqueID(d)))); // TODO: update distance div to blank text when nothing is selected
+        .text((d) => format('.1f')((distances.get(getUniqueID(d)))));
+    } else {
+      this.listItemDistance
+        .text('');
+    }
+    if (distances !== null) {
+      this.listItems
+        .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
     }
   }
 }
