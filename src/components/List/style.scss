@@ -115,7 +115,7 @@ $sliderHeight: 10px;
   height: $sliderHeight;
   width: $sliderHeight;
   left: 1px;
-  bottom: 1%;
+  bottom: 5%;
   background-color: white;
   -webkit-transition: .4s;
   transition: .4s;
@@ -157,7 +157,7 @@ input:checked + .slider:before {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
-  overflow: hidden; // TODO: figure out how to get ellipse to work
+  overflow: hidden; // TODO: figure out how to get ellipsis to work
   height:$rowHeight;
   cursor: pointer;
   display: flex;
@@ -166,6 +166,10 @@ input:checked + .slider:before {
 
 .listItem, .categoryRow {
   border-bottom: $colorDisabled 1px solid;
+}
+
+.listItemDistance {
+  // TODO: center this in the 30px box below the toggle
 }
 
 .listItemIcon {
