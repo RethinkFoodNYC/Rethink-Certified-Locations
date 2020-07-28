@@ -58,13 +58,13 @@ export default class List {
       .join('div')
       .attr('class', 'toggle');
 
-    const switchEl = this.toggle
+    this.switchEl = this.toggle
       .selectAll('label.switch')
       .data((d) => [d])
       .join('label')
       .attr('class', 'switch');
 
-    switchEl
+    this.switchEl
       .selectAll('input')
       .data((d) => [d])
       .join('input')
@@ -72,9 +72,10 @@ export default class List {
       .attr('id', ([name]) => name)
       .on('click', ([name]) => this.toggleCategory(name));
 
-    switchEl
+    this.switchEl
       .append('span')
       .attr('class', 'slider round')
+      .attr('id', 'sliderBk') // add id so that slider background can be classed later
       .style('background-color', ([name]) => COLORS[name]);
 
     this.body = this.wrapper
@@ -144,10 +145,16 @@ export default class List {
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
 
+    // add in toggle class for gray styling
+    this.switchEl
+      .selectAll('span#sliderBk')
+      .data(([_, items]) => items)
+      .classed('toggleStatusOff', (d) => toggleStatus[d[K.CAT]] === false);
+
     // add distance to list and sort in ascending order from selected point; remove distance when no point is selected
     if (distances !== null) {
       this.listItemDistance
-        .text((d) => format('.1f')((distances.get(getUniqueID(d)))));
+        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
     } else {
       this.listItemDistance
         .text('');
