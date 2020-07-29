@@ -47,7 +47,7 @@ export default class List {
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([name, items]) => `<span><span class="name">${name}</span> <span class="count">(${items.length})</span> `)
+      .html(([category, items]) => `<span><span class="name">${category}</span> <span class="count">(${items.length})</span> `)
       .on('click', function () {
         this.parentNode.parentNode.classList.toggle('isOpen');
       });
@@ -69,14 +69,13 @@ export default class List {
       .data((d) => [d])
       .join('input')
       .attr('type', 'checkbox')
-      .attr('id', ([name]) => name)
-      .on('click', ([name]) => this.toggleCategory(name));
+      .attr('id', ([category]) => category)
+      .on('click', ([category]) => this.toggleCategory(category));
 
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      .attr('id', 'sliderBk') // add id so that slider background can be classed later
-      .style('background-color', ([name]) => COLORS[name]);
+      .style('background-color', ([category]) => COLORS[category]);
 
     this.body = this.wrapper
       .append('div')
@@ -84,13 +83,11 @@ export default class List {
 
     this.listItems = this.body
       .selectAll('div.listItem')
-      .data(([_, items]) => items)
+      .data(([, items]) => items)
       .join('div')
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
-    // .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
 
-    // placeholder for promise that comes later
     this.listItems
       .append('div')
       .attr('class', 'listItemIcon');
@@ -106,14 +103,14 @@ export default class List {
 
     this.listItems
       .select('.listItemIcon')
-      .html(this.icon)
+      .html(this.icon) // created from async func loadIcon()
       .attr('width', '30px')
       .attr('height', '30px')
       .style('stroke', (d) => COLORS[d[K.CAT]])
       .select('.map-point')
       .style('fill', (d) => COLORS[d[K.CAT]]);
 
-    // placeholder for distance that comes later
+    // placeholder for distance updated with selected
     this.listItemDistance = this.listItems
       .append('div')
       .attr('class', 'listItemDistance')
@@ -122,8 +119,8 @@ export default class List {
       .attr('class', 'listItemDistance');
   }
 
-  toggleCategory(name) {
-    this.store.dispatch(Act.updateToggle(name));
+  toggleCategory(category) {
+    this.store.dispatch(Act.updateToggle(category));
     this.globalUpdate();
   }
 
@@ -147,25 +144,22 @@ export default class List {
 
     // add in toggle class for gray styling
     this.switchEl
-      .selectAll('span#sliderBk')
-      .data(([_, items]) => items)
-      .classed('toggleStatusOff', (d) => toggleStatus[d[K.CAT]] === false);
+      .selectAll('span.slider')
+      .classed('toggleStatusOff', ([category]) => toggleStatus[category] === false);
 
-    // add distance to list and sort in ascending order from selected point; remove distance when no point is selected
-    if (distances !== null) {
-      this.listItemDistance
-        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
-    } else {
-      this.listItemDistance
-        .text('');
-    }
+    // add distance to list and sort in ascending order from selected point;
+    // remove distance when no point is selected
     if (distances !== null) {
       this.listItems
         .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
+      this.listItemDistance
+        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
     } else {
       this.listItems
-        .data(([_, items]) => items)
+        .data(([, items]) => items)
         .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
+      this.listItemDistance
+        .text('');
     }
   }
 }

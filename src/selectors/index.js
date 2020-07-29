@@ -47,5 +47,5 @@ export const getInBuffer = createSelector([
   if (distanceMap === null) {
     return [];
   }
-  return Array.from(distanceMap.entries()).filter(([uniqueID, dist]) => dist < 1).map(([uniqueID, dist]) => uniqueID);
+  return [...distanceMap.entries()].filter(([uniqueID, dist]) => dist < 1).map(([uniqueID, dist]) => uniqueID);
 });
