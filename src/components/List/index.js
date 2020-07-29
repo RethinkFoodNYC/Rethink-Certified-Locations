@@ -1,5 +1,6 @@
 import { select, text, format } from 'd3';
 import './style.scss';
+import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS, STATE as S } from '../../globals/constants';
@@ -57,13 +58,13 @@ export default class List {
       .join('div')
       .attr('class', 'toggle');
 
-    const switchEl = this.toggle
+    this.switchEl = this.toggle
       .selectAll('label.switch')
       .data((d) => [d])
       .join('label')
       .attr('class', 'switch');
 
-    switchEl
+    this.switchEl
       .selectAll('input')
       .data((d) => [d])
       .join('input')
@@ -71,9 +72,10 @@ export default class List {
       .attr('id', ([name]) => name)
       .on('click', ([name]) => this.toggleCategory(name));
 
-    switchEl
+    this.switchEl
       .append('span')
       .attr('class', 'slider round')
+      .attr('id', 'sliderBk') // add id so that slider background can be classed later
       .style('background-color', ([name]) => COLORS[name]);
 
     this.body = this.wrapper
@@ -86,6 +88,7 @@ export default class List {
       .join('div')
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
+    // .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
 
     // placeholder for promise that comes later
     this.listItems
@@ -136,15 +139,33 @@ export default class List {
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
-    // console.log(toggleStatus);
 
     // add in buffer and selected classes for styling
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
+
+    // add in toggle class for gray styling
+    this.switchEl
+      .selectAll('span#sliderBk')
+      .data(([_, items]) => items)
+      .classed('toggleStatusOff', (d) => toggleStatus[d[K.CAT]] === false);
+
+    // add distance to list and sort in ascending order from selected point; remove distance when no point is selected
     if (distances !== null) {
       this.listItemDistance
-        .text((d) => format('.1f')(distances.get(getUniqueID(d)))); // TODO: update distance div to blank text when nothing is selected
+        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
+    } else {
+      this.listItemDistance
+        .text('');
+    }
+    if (distances !== null) {
+      this.listItems
+        .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
+    } else {
+      this.listItems
+        .data(([_, items]) => items)
+        .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
     }
   }
 }

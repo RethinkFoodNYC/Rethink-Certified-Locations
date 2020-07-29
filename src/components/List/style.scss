@@ -138,17 +138,20 @@ input:checked + .slider:before {
 
 
   .body {
-    padding: 0 $iconWidth 0 0;
     height: 100%;
     overflow: scroll;
   }
+}
+
+.toggleStatusOff  {
+  background-color: $colorDisabledDarker !important; // TODO: not need important class
 }
 
 .category {
   font-size: $fontSizeSmall;
   //box-sizing: border-box;
   width: 100%;
-  overflow: hidden; // TODO: figure out how to get ellipse to work
+  overflow: hidden;
   height:$rowHeight;
   cursor: pointer;
 }
@@ -157,7 +160,9 @@ input:checked + .slider:before {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
+  white-space: nowrap;
   overflow: hidden; // TODO: figure out how to get ellipsis to work
+  text-overflow: ellipsis; // still not working
   height:$rowHeight;
   cursor: pointer;
   display: flex;
@@ -169,7 +174,7 @@ input:checked + .slider:before {
 }
 
 .listItemDistance {
-  // TODO: center this in the 30px box below the toggle
+  padding: 8px;
 }
 
 .listItemIcon {

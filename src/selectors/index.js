@@ -30,7 +30,7 @@ export const getDistances = createSelector([
     return null;
   }
   const selected = flatDataMap.get(selectedID);
-  return new Map(Array.from(flatDataMap.entries()).map(([uniqueID, d]) => {
+  return new Map([...flatDataMap].map(([uniqueID, d]) => {
     const dist = distance(
       selected[K.LAT],
       selected[K.LONG],
