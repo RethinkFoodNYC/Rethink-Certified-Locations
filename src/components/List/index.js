@@ -88,6 +88,7 @@ export default class List {
       .join('div')
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
+    // .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
 
     // placeholder for promise that comes later
     this.listItems
@@ -138,7 +139,6 @@ export default class List {
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
-    // console.log(toggleStatus);
 
     // add in buffer and selected classes for styling
     this.listItems
@@ -162,6 +162,10 @@ export default class List {
     if (distances !== null) {
       this.listItems
         .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
+    } else {
+      this.listItems
+        .data(([_, items]) => items)
+        .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
     }
   }
 }
