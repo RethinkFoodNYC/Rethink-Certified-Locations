@@ -8,6 +8,7 @@ export const getData = (state) => state[S.DATA];
 export const getVisibleInList = (state) => state[S.VISIBLE_STATUS];
 export const getToggleStatus = (state) => state[S.TOGGLE_STATUS];
 export const getSelectedUniqueID = (state) => state[S.SELECTED];
+export const newDist = (state) => state[S.NEW_DIST];
 
 /** Data Manipulations */
 export const getFlatData = createSelector([
@@ -41,11 +42,15 @@ export const getDistances = createSelector([
   }));
 });
 
+export const getNewBufferRadius = createSelector([
+  newDist,
+], (newDist) => newDist);
+
 export const getInBuffer = createSelector([
-  getDistances,
-], (distanceMap) => {
+  getDistances, newDist,
+], (distanceMap, newDistance) => {
   if (distanceMap === null) {
     return [];
   }
-  return [...distanceMap.entries()].filter(([uniqueID, dist]) => dist < 1).map(([uniqueID, dist]) => uniqueID);
+  return [...distanceMap.entries()].filter(([uniqueID, dist]) => dist < newDistance).map(([uniqueID, dist]) => uniqueID);
 });

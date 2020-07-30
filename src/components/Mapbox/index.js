@@ -57,10 +57,17 @@ export default class Mapbox {
         // Prevent the default map drag behavior.
         e.preventDefault();
         this.map.getCanvas().style.cursor = 'grab';
-        // this.map.on('mousemove', (e) => this.onMove(e)); // MIGHT NOT NEED
-        this.map.on('mousemove', this.BUFFER, (e) => this.onMove(e));
-        // this.map.once('mouseup', (e) => this.onUp(e)); // MIGHT NOT NEED
-        this.map.once('mouseup', this.BUFFER, (e) => this.onUp(e));
+        this.map.on('mousemove', this.BUFFER, (e) => this.onMove(e)); // if this.BUFFER is specified as the layer to click on,
+        // mouseup fires successfully and prevents mousemove from triggering further buffer change, but the buffer can only get smaller
+        // if this.BUFFER is NOT specified, mouseup fires once but then mousemove keeps triggering a buffer change
+        this.map.on('mouseup', (e) => this.onUp(e)); // this is not remaining true after firing, once() doesn't work at all
+      });
+
+      this.map.on('touchstart', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.on('touchmove', (e) => this.onMove(e));
+        this.map.once('touchend', (e) => this.onUp(e));
       });
     });
 
@@ -75,26 +82,30 @@ export default class Mapbox {
 
   onMove(e) {
     const coords = e.lngLat;
+
     // Set a UI indicator for dragging.
     this.map.getCanvas().style.cursor = 'grabbing';
-    // Update the Point feature in `geojson` coordinates
-    // and call setData to the source layer `point` on it.
+
+    // update buffer as mouse is moving
     const selected = Sel.getSelected(this.store.getState());
-    this.showBuffer(distance(selected[K.LONG], selected[K.LAT], ...coords))
+    this.newDist = distance(selected[K.LAT], selected[K.LONG], coords.lat, coords.lng); // spreading coords gave @@non-iterable error
+    this.showBuffer(this.newDist);
+
     console.log('coords DURING:', coords);
-    // geojson.features[0].geometry.coordinates = [coords.lng, coords.lat];
-    // map.getSource('point').setData(geojson);
   }
 
   onUp(e) {
     const coords = e.lngLat;
-    // Print the coordinates of where the point had
-    // finished being dragged to on the map.
     this.map.getCanvas().style.cursor = '';
     console.log('coords END:', coords);
+
     // Unbind mouse/touch events
-    this.map.off('mousemove', (e) => this.onMove(e));
-    this.map.off('mousemove', this.BUFFER, (e) => this.onMove(e));
+    this.map.off('touchmove', this.onMove);
+    this.map.off('mousemove', this.onMove);
+
+    // Update state with new buffer radius to start inBuffer
+    this.store.dispatch(Act.setNewDist(this.newDist));
+    this.globalUpdate();
   }
 
   /** Gets called externally from app once a user has logged in */
@@ -183,7 +194,7 @@ export default class Mapbox {
       marker.togglePopup();
 
       // add buffer
-      this.showBuffer(1); // default selection distance is 1 mile
+      this.showBuffer(Sel.getNewBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
 
       // zoom to point
       this.map.flyTo({
@@ -198,7 +209,7 @@ export default class Mapbox {
   showBuffer(distance) {
     // need to pull so we can update locally with expanding buffer rather than re-draw
     const selected = Sel.getSelected(this.store.getState());
-    const point = turf.point(selected[K.LONG], selected[K.LAT]);
+    const point = turf.point([selected[K.LONG], selected[K.LAT]]);
     // create buffer
     const buffered = buffer(point, distance, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
