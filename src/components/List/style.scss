@@ -156,6 +156,10 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+.distance {
+  padding: 5%;
+}
+
 .listItem, .listItemRow {
   font-size: $fontSizeSmall;
   box-sizing: border-box;

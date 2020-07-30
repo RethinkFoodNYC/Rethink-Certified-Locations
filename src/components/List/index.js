@@ -22,6 +22,8 @@ export default class List {
   addData() {
     // get data from store
     const data = Sel.getData(this.store.getState());
+    const newBufferRadius = Sel.getNewBufferRadius(this.store.getState());
+    // console.log('distance', distance);
 
     // dynamically add all categories to store as "on"
     this.store.dispatch(Act.initCategories(
@@ -35,6 +37,11 @@ export default class List {
       .data(data)
       .join('div')
       .attr('class', 'wrapper');
+
+    this.distanceRow = parent
+      .append('div')
+      .attr('class', 'category distance')
+      .text(`Buffer radius: ${format('.1f')(newBufferRadius)} miles`);
 
     this.categoryRow = this.wrapper
       .selectAll('div.categoryRow')
@@ -135,6 +142,7 @@ export default class List {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
+    const newBufferRadius = Sel.getNewBufferRadius(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
 
     // add in buffer and selected classes for styling
@@ -146,6 +154,9 @@ export default class List {
     this.switchEl
       .selectAll('span.slider')
       .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
+
+    this.distanceRow
+      .text(`Buffer radius: ${format('.1f')(newBufferRadius)} miles`);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected
