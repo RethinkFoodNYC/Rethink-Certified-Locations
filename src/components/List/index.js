@@ -145,7 +145,7 @@ export default class List {
     // add in toggle class for gray styling
     this.switchEl
       .selectAll('span.slider')
-      .classed('toggleStatusOff', ([category]) => toggleStatus[category] === false);
+      .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected
