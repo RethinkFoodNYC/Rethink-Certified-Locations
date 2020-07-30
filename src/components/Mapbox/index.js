@@ -5,7 +5,7 @@ import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID } from '../../globals/helpers';
+import { getUniqueID, distance } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -40,18 +40,61 @@ export default class Mapbox {
       center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
+    // console.log(this.canvas, this.map.getCanvas);
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
+
+      this.map.on('mouseenter', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+
+      this.map.on('mouseleave', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+
+      this.map.on('mousedown', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.getCanvas().style.cursor = 'grab';
+        // this.map.on('mousemove', (e) => this.onMove(e)); // MIGHT NOT NEED
+        this.map.on('mousemove', this.BUFFER, (e) => this.onMove(e));
+        // this.map.once('mouseup', (e) => this.onUp(e)); // MIGHT NOT NEED
+        this.map.once('mouseup', this.BUFFER, (e) => this.onUp(e));
+      });
     });
 
-    this.map.on('click', (e) => {
-      // if you click on the canvas instead of a path/marker
-      if (e.originalEvent.target.className === 'mapboxgl-canvas') {
-        this.store.dispatch(Act.setSelected(null));
-        this.globalUpdate();
-      }
-    });
+    // this.map.on('click', (e) => {
+    //   // if you click on the canvas instead of a path/marker
+    //   if (e.originalEvent.target.className === 'mapboxgl-canvas') {
+    //     this.store.dispatch(Act.setSelected(null));
+    //     this.globalUpdate();
+    //   }
+    // });
+  }
+
+  onMove(e) {
+    const coords = e.lngLat;
+    // Set a UI indicator for dragging.
+    this.map.getCanvas().style.cursor = 'grabbing';
+    // Update the Point feature in `geojson` coordinates
+    // and call setData to the source layer `point` on it.
+    const selected = Sel.getSelected(this.store.getState());
+    this.showBuffer(distance(selected[K.LONG], selected[K.LAT], ...coords))
+    console.log('coords DURING:', coords);
+    // geojson.features[0].geometry.coordinates = [coords.lng, coords.lat];
+    // map.getSource('point').setData(geojson);
+  }
+
+  onUp(e) {
+    const coords = e.lngLat;
+    // Print the coordinates of where the point had
+    // finished being dragged to on the map.
+    this.map.getCanvas().style.cursor = '';
+    console.log('coords END:', coords);
+    // Unbind mouse/touch events
+    this.map.off('mousemove', (e) => this.onMove(e));
+    this.map.off('mousemove', this.BUFFER, (e) => this.onMove(e));
   }
 
   /** Gets called externally from app once a user has logged in */
@@ -140,7 +183,7 @@ export default class Mapbox {
       marker.togglePopup();
 
       // add buffer
-      this.showBuffer(coordinates);
+      this.showBuffer(1); // default selection distance is 1 mile
 
       // zoom to point
       this.map.flyTo({
@@ -152,10 +195,12 @@ export default class Mapbox {
     }
   }
 
-  showBuffer(coords) {
-    const point = turf.point(coords);
+  showBuffer(distance) {
+    // need to pull so we can update locally with expanding buffer rather than re-draw
+    const selected = Sel.getSelected(this.store.getState());
+    const point = turf.point(selected[K.LONG], selected[K.LAT]);
     // create buffer
-    const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
+    const buffered = buffer(point, distance, { units: 'miles', steps: 16 });
     this.map.getSource(this.BUFFER).setData(buffered);
   }
 
