@@ -1,13 +1,13 @@
 import mapboxgl from 'mapbox-gl';
 import turf from 'turf';
 import buffer from '@turf/buffer';
+import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { getUniqueID } from '../../globals/helpers';
 
 import './style.scss';
-
 
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
@@ -179,9 +179,15 @@ export default class Mapbox {
     }
   }
 
+  toggleVisibility(status) {
+    // map over markers and turn off / on according to toggle
+    this.markers.forEach(([marker, data], uniqueID) => select(marker.getElement()).classed('off', !status[data[K.CAT]]));
+  }
+
   draw() {
     this.selectPoint(Sel.getSelected(this.store.getState()));
     this.colorMarkers(Sel.getInBuffer(this.store.getState()));
+    this.toggleVisibility(Sel.getToggleStatus(this.store.getState()));
   }
 
   fitBounds(geojsonData) {

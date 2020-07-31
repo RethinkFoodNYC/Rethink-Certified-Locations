@@ -2,6 +2,8 @@
 
 $iconWidth: 30px;
 $rowHeight: 30px;
+$sliderWidth: 25px;
+$sliderHeight: 10px;
 
 #list {
   font-family: $fontRegular;
@@ -23,20 +25,29 @@ $rowHeight: 30px;
 }
 
 .wrapper {
+  border-bottom: $colorDisabled 1px solid;
   max-height: $rowHeight;
   min-height: $rowHeight;
   overflow: hidden;
   transition: max-height 300ms;
 
+  .categoryRow {
+    display: flex;
+    flex-direction: row;
+    height: $rowHeight;
+    justify-content: space-between;
+    border-bottom: $colorDisabled 1px solid;
+  }
+
   .category::before {
-    transform: translateY(-15%) translateX(-20%) rotate(-90deg);
+    transform: translateY(-10%) translateX(10%) rotate(-90deg);
   }
 
   &.isOpen {
     max-height: 1000px;
 
     .category::before{
-      transform: translateY(-15%) translateX(0%) 
+      transform: translateY(10%) translateX(10%) 
 
     }
     .category .name{
@@ -45,7 +56,6 @@ $rowHeight: 30px;
   }
 
   .category {
-    padding: .5em;
     border-bottom: $colorDisabled 1px solid;
     font-weight: 400;
     display: flex;
@@ -65,18 +75,93 @@ $rowHeight: 30px;
     }
   }
 
+
+.toggle {
+  margin: auto;
+  padding: 10px;
+}
+  /* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: $sliderWidth;
+  height: $rowHeight*.4;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: $sliderHeight;
+  width: $sliderHeight;
+  left: 1px;
+  bottom: 1px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX($sliderWidth*.5);
+  -ms-transform: translateX($sliderWidth*.5);
+  transform: translateX($sliderWidth*.5);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+
   .body {
-    padding: 0 $iconWidth 0 0;
     height: 100%;
     overflow: scroll;
   }
 }
 
-.download, .category, .listItem, .listItemRow {
+.toggleStatusOff  {
+  background-color: $colorDisabledDarker !important; // TODO: not need important class
+}
+
+.category {
+  font-size: $fontSizeSmall;
+  //box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  height:$rowHeight;
+  cursor: pointer;
+}
+
+.listItem, .listItemRow, .download {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
-  overflow: hidden; // TODO: figure out how to get ellipse to work
+  white-space: nowrap;
+  overflow: hidden; // TODO: figure out how to get ellipsis to work
+  text-overflow: ellipsis; // still not working
   height:$rowHeight;
   cursor: pointer;
   display: flex;
@@ -110,8 +195,12 @@ $rowHeight: 30px;
   }
 }
 
-.listItem, .category {
+.listItem, .categoryRow {
   border-bottom: $colorDisabled 1px solid;
+}
+
+.listItemDistance {
+  padding: 8px;
 }
 
 .listItemIcon {

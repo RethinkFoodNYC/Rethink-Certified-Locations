@@ -1,5 +1,6 @@
-import { select, text } from 'd3';
+import { select, text, format } from 'd3';
 import './style.scss';
+import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS } from '../../globals/constants';
@@ -37,15 +38,46 @@ export default class List {
       .join('div')
       .attr('class', 'wrapper');
 
-    this.category = this.wrapper
+    this.categoryRow = this.wrapper
+      .selectAll('div.categoryRow')
+      .data((d) => [d])
+      .join('div')
+      .attr('class', 'categoryRow');
+
+    this.category = this.categoryRow
       .selectAll('div.category')
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([name, items]) => `<span><span class="name">${name}</span> <span class="count">(${items.length})</span></span>`)
+      .html(([category, items]) => `<span><span class="name">${category}</span> <span class="count">(${items.length})</span> `)
       .on('click', function () {
-        this.parentNode.classList.toggle('isOpen');
+        this.parentNode.parentNode.classList.toggle('isOpen');
       });
+
+    this.toggle = this.categoryRow
+      .selectAll('div.toggle')
+      .data((d) => [d])
+      .join('div')
+      .attr('class', 'toggle');
+
+    this.switchEl = this.toggle
+      .selectAll('label.switch')
+      .data((d) => [d])
+      .join('label')
+      .attr('class', 'switch');
+
+    this.switchEl
+      .selectAll('input')
+      .data((d) => [d])
+      .join('input')
+      .attr('type', 'checkbox')
+      .attr('id', ([category]) => category)
+      .on('click', ([category]) => this.toggleCategory(category));
+
+    this.switchEl
+      .append('span')
+      .attr('class', 'slider round')
+      .style('background-color', ([category]) => COLORS[category]);
 
     this.body = this.wrapper
       .append('div')
@@ -53,12 +85,11 @@ export default class List {
 
     this.listItems = this.body
       .selectAll('div.listItem')
-      .data(([_, items]) => items)
+      .data(([, items]) => items)
       .join('div')
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
 
-    // placeholder for promise that comes later
     this.listItems
       .append('div')
       .attr('class', 'listItemIcon')
@@ -77,6 +108,13 @@ export default class List {
         this.store.dispatch(Act.setSelected(d));
         this.globalUpdate();
       });
+
+    // placeholder for distance updated with selected
+    this.listItemDistance = this.listItems
+      .append('div')
+      .attr('class', 'listItemDistance')
+      .attr('width', '60px')
+      .attr('height', '60px');
 
     this.downloadLink = parent
       .append('div')
@@ -108,6 +146,11 @@ export default class List {
     link.remove();
   }
 
+  toggleCategory(category) {
+    this.store.dispatch(Act.updateToggle(category));
+    this.globalUpdate();
+  }
+
   removeData() {
     // console.log('data removed from list');
     if (this.wrapper) {
@@ -118,6 +161,8 @@ export default class List {
   draw() {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
+    const toggleStatus = Sel.getToggleStatus(this.store.getState());
+    const distances = Sel.getDistances(this.store.getState());
 
     this.downloadLink
       .classed('inactive', inBuffer.length === 0);
@@ -126,5 +171,25 @@ export default class List {
     this.listItems
       .classed('inBuffer', (d) => inBuffer.includes(getUniqueID(d)))
       .classed('selected', (d) => selected === getUniqueID(d));
+
+    // add in toggle class for gray styling
+    this.switchEl
+      .selectAll('span.slider')
+      .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
+
+    // add distance to list and sort in ascending order from selected point;
+    // remove distance when no point is selected
+    if (distances !== null) {
+      this.listItems
+        .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
+      this.listItemDistance
+        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
+    } else {
+      this.listItems
+        .data(([, items]) => items)
+        .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
+      this.listItemDistance
+        .text('');
+    }
   }
 }
