@@ -11,3 +11,11 @@ export function calculateDistance(coords1, coords2) {
 
   return distance(from, to, { units: 'miles' });
 }
+
+export function convertToTSV(data) {
+  const headers = Object.keys(data[0]);
+  const stringRows = data.map((row) => headers
+    .map((fieldName) => row[fieldName])
+    .join('\t'));
+  return ['data:text/csv;charset=utf-8,', headers.join('\t'), ...stringRows].join('\r\n');
+}

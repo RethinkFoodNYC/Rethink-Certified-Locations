@@ -3,20 +3,22 @@ import './style.scss';
 import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { KEYS as K, COLORS, STATE as S } from '../../globals/constants';
-import { getUniqueID } from '../../globals/helpers';
+import { KEYS as K, COLORS } from '../../globals/constants';
+import { getUniqueID, convertToTSV } from '../../globals/helpers';
 
 export default class List {
   constructor(store, globalUpdate) {
     this.store = store;
     this.globalUpdate = globalUpdate;
-    this.loadIcon();
+    this.loadIcons();
   }
 
-  async loadIcon() {
+  async loadIcons() {
     // source: https://github.com/parcel-bundler/parcel/issues/4222
-    const iconPath = require('url:../../../assets/icon.svg');
-    this.icon = await text(iconPath);
+    const mapIconPath = require('url:../../../assets/icon.svg')
+    this.mapIcon = await text(mapIconPath);
+    const dlIconPath = require('url:../../../assets/download.svg')
+    this.downloadIcon = await text(dlIconPath);
   }
 
   addData() {
@@ -26,7 +28,7 @@ export default class List {
 
     // dynamically add all categories to store as "on"
     this.store.dispatch(Act.initCategories(
-      data.map(([cat, _]) => cat),
+      data.map(([cat]) => cat),
     ));
 
     const parent = select('#list');
@@ -97,7 +99,13 @@ export default class List {
 
     this.listItems
       .append('div')
-      .attr('class', 'listItemIcon');
+      .attr('class', 'listItemIcon')
+      .html(this.mapIcon)
+      .attr('width', '30px')
+      .attr('height', '30px')
+      .style('stroke', (d) => COLORS[d[K.CAT]])
+      .select('.map-point')
+      .style('fill', (d) => COLORS[d[K.CAT]]);
 
     this.listItems
       .append('span')
@@ -108,22 +116,41 @@ export default class List {
         this.globalUpdate();
       });
 
-    this.listItems
-      .select('.listItemIcon')
-      .html(this.icon) // created from async func loadIcon()
-      .attr('width', '30px')
-      .attr('height', '30px')
-      .style('stroke', (d) => COLORS[d[K.CAT]])
-      .select('.map-point')
-      .style('fill', (d) => COLORS[d[K.CAT]]);
-
     // placeholder for distance updated with selected
     this.listItemDistance = this.listItems
       .append('div')
       .attr('class', 'listItemDistance')
       .attr('width', '60px')
-      .attr('height', '60px')
-      .attr('class', 'listItemDistance');
+      .attr('height', '60px');
+
+    this.downloadLink = parent
+      .append('div')
+      .attr('class', 'download inactive'); // start as inactive
+
+    this.downloadLink
+      .append('span')
+      .text('download data within range')
+      .on('click', () => this.download());
+
+    this.downloadLink
+      .append('div')
+      .attr('class', 'downloadIcon')
+      .html(this.downloadIcon)
+      .attr('width', '30px')
+      .attr('height', '30px');
+  }
+
+  download() {
+    const inBuffer = Sel.getInBuffer(this.store.getState());
+    const flatDataMap = Sel.getFlatDataMap(this.store.getState());
+    const tsv = convertToTSV(inBuffer.map((id) => flatDataMap.get(id)));
+
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(tsv));
+    link.setAttribute('download', 'map_results.tsv');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   toggleCategory(category) {
@@ -144,6 +171,9 @@ export default class List {
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
     const bufferRadius = Sel.getBufferRadius(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
+
+    this.downloadLink
+      .classed('inactive', inBuffer.length === 0);
 
     // add in buffer and selected classes for styling
     this.listItems
