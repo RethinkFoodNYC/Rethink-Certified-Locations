@@ -44,7 +44,7 @@ $rowHeight: 30px;
     }
   }
 
-  .category{
+  .category {
     padding: .5em;
     border-bottom: $colorDisabled 1px solid;
     font-weight: 400;
@@ -72,7 +72,7 @@ $rowHeight: 30px;
   }
 }
 
-.category, .listItem, .listItemRow {
+.download, .category, .listItem, .listItemRow {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
@@ -81,6 +81,33 @@ $rowHeight: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
+}
+
+.download {
+  max-height: 1000px;
+  min-height: $rowHeight;
+  box-sizing: border-box;
+  border-top: $colorDisabled 1px solid;
+  display: flex;
+  justify-content: flex-end;
+  float: right;
+  &.inactive {
+    span, div {
+      opacity: 0.2;
+    }
+    pointer-events: none;
+    cursor: none;
+  }
+}
+
+.downloadIcon {
+  padding: 5px;
+  svg {
+    height: 12px;
+  }
+  path {
+    stroke: black;
+  }
 }
 
 .listItem, .category {
