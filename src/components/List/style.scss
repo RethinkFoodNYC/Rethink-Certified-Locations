@@ -155,11 +155,7 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
-.radius {
-  padding: 5%;
-}
-
-.listItem, .listItemRow, .download {
+.listItem, .listItemRow, .buffer-info {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
@@ -172,11 +168,16 @@ input:checked + .slider:before {
   align-items: center;
 }
 
-.download {
+.buffer-info {
+  display: block;
   max-height: 1000px;
-  min-height: $rowHeight;
+  min-height: fit-content;
+}
+
+.radius, .download {
+  padding: 5px 5px 0px 0px;
   box-sizing: border-box;
-  border-top: $colorDisabled 1px solid;
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   float: right;

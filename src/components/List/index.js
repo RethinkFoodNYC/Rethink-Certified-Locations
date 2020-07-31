@@ -11,6 +11,7 @@ export default class List {
     this.store = store;
     this.globalUpdate = globalUpdate;
     this.loadIcons();
+    this.updateRangeRadius = this.updateRangeRadius.bind(this);
   }
 
   async loadIcons() {
@@ -38,11 +39,6 @@ export default class List {
       .data(data)
       .join('div')
       .attr('class', 'wrapper');
-
-    this.radiusRow = parent
-      .append('div')
-      .attr('class', 'category radius')
-      .text(`Buffer radius: ${format('.1f')(bufferRadius)} miles`);
 
     this.categoryRow = this.wrapper
       .selectAll('div.categoryRow')
@@ -123,13 +119,22 @@ export default class List {
       .attr('width', '60px')
       .attr('height', '60px');
 
-    this.downloadLink = parent
+    this.bufferInfo = parent
+      .append('div')
+      .attr('class', 'buffer-info');
+
+    this.radiusRow = this.bufferInfo
+      .append('div')
+      .attr('class', 'radius')
+      .text(`Range radius: ${format('.1f')(bufferRadius)} miles`);
+
+    this.downloadLink = this.bufferInfo
       .append('div')
       .attr('class', 'download inactive'); // start as inactive
 
     this.downloadLink
       .append('span')
-      .text('download data within range')
+      .text('Download range data')
       .on('click', () => this.download());
 
     this.downloadLink
@@ -165,11 +170,15 @@ export default class List {
     }
   }
 
+  updateRangeRadius(range) {
+    this.radiusRow
+      .text(`Range radius: ${format('.1f')(range)} miles`);
+  }
+
   draw() {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
-    const bufferRadius = Sel.getBufferRadius(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
 
     this.downloadLink
@@ -184,9 +193,6 @@ export default class List {
     this.switchEl
       .selectAll('span.slider')
       .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
-
-    this.radiusRow
-      .text(`Buffer radius: ${format('.1f')(bufferRadius)} miles`);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected

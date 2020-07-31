@@ -23,10 +23,11 @@ const descriptionGenerator = (pointData) => `
   <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
-  constructor(store, globalUpdate) {
+  constructor(store, globalUpdate, updateRangeRadius) {
     this.initializeMap();
     this.store = store;
     this.globalUpdate = globalUpdate;
+    this.updateRangeRadius = updateRangeRadius;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
     this.onMove = this.onMove.bind(this);
@@ -75,6 +76,7 @@ export default class Mapbox {
       if (e.originalEvent.target.className === 'mapboxgl-canvas') {
         this.store.dispatch(Act.setSelected(null)); // remove selected
         this.store.dispatch(Act.setBufferRadius(1)); // reset buffer size
+        this.updateRangeRadius(1);
         this.globalUpdate();
       }
     });
@@ -93,6 +95,7 @@ export default class Mapbox {
       [coords.lng, coords.lat],
     );
     this.showBuffer(this.bufferDist);
+    this.updateRangeRadius(this.bufferDist);
   }
 
   onUp() {
