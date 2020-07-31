@@ -22,8 +22,7 @@ export default class List {
   addData() {
     // get data from store
     const data = Sel.getData(this.store.getState());
-    const newBufferRadius = Sel.getNewBufferRadius(this.store.getState());
-    // console.log('distance', distance);
+    const bufferRadius = Sel.getBufferRadius(this.store.getState());
 
     // dynamically add all categories to store as "on"
     this.store.dispatch(Act.initCategories(
@@ -38,10 +37,10 @@ export default class List {
       .join('div')
       .attr('class', 'wrapper');
 
-    this.distanceRow = parent
+    this.radiusRow = parent
       .append('div')
-      .attr('class', 'category distance')
-      .text(`Buffer radius: ${format('.1f')(newBufferRadius)} miles`);
+      .attr('class', 'category radius')
+      .text(`Buffer radius: ${format('.1f')(bufferRadius)} miles`);
 
     this.categoryRow = this.wrapper
       .selectAll('div.categoryRow')
@@ -92,6 +91,7 @@ export default class List {
       .selectAll('div.listItem')
       .data(([, items]) => items)
       .join('div')
+      .sort((a, b) => ascending(a[K.NAME], b[K.NAME]))
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
 
@@ -142,7 +142,7 @@ export default class List {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
     const toggleStatus = Sel.getToggleStatus(this.store.getState());
-    const newBufferRadius = Sel.getNewBufferRadius(this.store.getState());
+    const bufferRadius = Sel.getBufferRadius(this.store.getState());
     const distances = Sel.getDistances(this.store.getState());
 
     // add in buffer and selected classes for styling
@@ -155,8 +155,8 @@ export default class List {
       .selectAll('span.slider')
       .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
 
-    this.distanceRow
-      .text(`Buffer radius: ${format('.1f')(newBufferRadius)} miles`);
+    this.radiusRow
+      .text(`Buffer radius: ${format('.1f')(bufferRadius)} miles`);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected
@@ -164,10 +164,14 @@ export default class List {
       this.listItems
         .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
       this.listItemDistance
-        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
+        .text((d) => {
+          if (distances.has(getUniqueID(d))) {
+            return `${format('.1f')((distances.get(getUniqueID(d))))} mi`;
+          }
+          return '';
+        });
     } else {
       this.listItems
-        .data(([, items]) => items)
         .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
       this.listItemDistance
         .text('');

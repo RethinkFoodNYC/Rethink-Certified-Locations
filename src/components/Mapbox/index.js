@@ -1,11 +1,10 @@
 import mapboxgl from 'mapbox-gl';
-import turf from 'turf';
-import buffer from '@turf/buffer';
+import { point as turfPoint, circle, turfBbox } from '@turf/turf';
 import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID, distance } from '../../globals/helpers';
+import { getUniqueID, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -30,6 +29,8 @@ export default class Mapbox {
     this.globalUpdate = globalUpdate;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
   }
 
   initializeMap() {
@@ -57,27 +58,26 @@ export default class Mapbox {
         // Prevent the default map drag behavior.
         e.preventDefault();
         this.map.getCanvas().style.cursor = 'grab';
-        this.map.on('mousemove', this.BUFFER, (e) => this.onMove(e)); // if this.BUFFER is specified as the layer to click on,
-        // mouseup fires successfully and prevents mousemove from triggering further buffer change, but the buffer can only get smaller
-        // if this.BUFFER is NOT specified, mouseup fires once but then mousemove keeps triggering a buffer change
-        this.map.on('mouseup', (e) => this.onUp(e)); // this is not remaining true after firing, once() doesn't work at all
+        this.map.on('mousemove', this.onMove);
+        this.map.once('mouseup', this.onUp);
       });
 
       this.map.on('touchstart', this.BUFFER, (e) => {
         // Prevent the default map drag behavior.
         e.preventDefault();
-        this.map.on('touchmove', (e) => this.onMove(e));
-        this.map.once('touchend', (e) => this.onUp(e));
+        this.map.on('touchmove', this.onMove);
+        this.map.once('touchend', this.onUp);
       });
     });
 
-    // this.map.on('click', (e) => {
-    //   // if you click on the canvas instead of a path/marker
-    //   if (e.originalEvent.target.className === 'mapboxgl-canvas') {
-    //     this.store.dispatch(Act.setSelected(null));
-    //     this.globalUpdate();
-    //   }
-    // });
+    this.map.on('click', (e) => {
+      // if you click on the canvas instead of a path/marker
+      if (e.originalEvent.target.className === 'mapboxgl-canvas') {
+        this.store.dispatch(Act.setSelected(null)); // remove selected
+        this.store.dispatch(Act.setBufferRadius(1)); // reset buffer size
+        this.globalUpdate();
+      }
+    });
   }
 
   onMove(e) {
@@ -88,23 +88,22 @@ export default class Mapbox {
 
     // update buffer as mouse is moving
     const selected = Sel.getSelected(this.store.getState());
-    this.newDist = distance(selected[K.LAT], selected[K.LONG], coords.lat, coords.lng); // spreading coords gave @@non-iterable error
-    this.showBuffer(this.newDist);
-
-    console.log('coords DURING:', coords);
+    this.bufferDist = calculateDistance(
+      [selected[K.LONG], selected[K.LAT]],
+      [coords.lng, coords.lat],
+    );
+    this.showBuffer(this.bufferDist);
   }
 
-  onUp(e) {
-    const coords = e.lngLat;
+  onUp() {
     this.map.getCanvas().style.cursor = '';
-    console.log('coords END:', coords);
 
     // Unbind mouse/touch events
     this.map.off('touchmove', this.onMove);
     this.map.off('mousemove', this.onMove);
 
     // Update state with new buffer radius to start inBuffer
-    this.store.dispatch(Act.setNewDist(this.newDist));
+    this.store.dispatch(Act.setBufferRadius(this.bufferDist));
     this.globalUpdate();
   }
 
@@ -194,7 +193,7 @@ export default class Mapbox {
       marker.togglePopup();
 
       // add buffer
-      this.showBuffer(Sel.getNewBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
+      this.showBuffer(Sel.getBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
 
       // zoom to point
       this.map.flyTo({
@@ -206,12 +205,12 @@ export default class Mapbox {
     }
   }
 
-  showBuffer(distance) {
+  showBuffer(radius = 1) {
     // need to pull so we can update locally with expanding buffer rather than re-draw
     const selected = Sel.getSelected(this.store.getState());
-    const point = turf.point([selected[K.LONG], selected[K.LAT]]);
+    const point = turfPoint([selected[K.LONG], selected[K.LAT]]);
     // create buffer
-    const buffered = buffer(point, distance, { units: 'miles', steps: 16 });
+    const buffered = circle(point, radius, { units: 'miles', steps: 48 });
     this.map.getSource(this.BUFFER).setData(buffered);
   }
 
@@ -247,7 +246,7 @@ export default class Mapbox {
   }
 
   fitBounds(geojsonData) {
-    const bbox = turf.bbox(geojsonData);
+    const bbox = turfBbox(geojsonData);
     this.map.fitBounds(bbox, { padding: 50 });
   }
 }

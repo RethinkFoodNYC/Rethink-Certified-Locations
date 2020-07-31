@@ -42,8 +42,8 @@ export const updateToggle = (category) => ({
   category, // input here needs to tell the toggle the category and open/close
 });
 
-export const SET_DIST = 'SET_DIST';
-export const setNewDist = (distance) => ({
-  type: SET_DIST,
-  data: distance,
+export const SET_RADIUS = 'SET_RADIUS';
+export const setBufferRadius = (radius) => ({
+  type: SET_RADIUS,
+  data: radius,
 });
