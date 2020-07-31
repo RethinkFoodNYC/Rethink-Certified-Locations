@@ -31,13 +31,12 @@ $sliderHeight: 10px;
   overflow: hidden;
   transition: max-height 300ms;
 
-  .categoryRow{
-  display: flex;
-  flex-direction: row;
-  height: $rowHeight;
-  //justify-content: space-between;
-  border-bottom: $colorDisabled 1px solid;
-
+  .categoryRow {
+    display: flex;
+    flex-direction: row;
+    height: $rowHeight;
+    justify-content: space-between;
+    border-bottom: $colorDisabled 1px solid;
   }
 
   .category::before {
@@ -56,8 +55,8 @@ $sliderHeight: 10px;
     }
   }
 
-  .category{
-
+  .category {
+    border-bottom: $colorDisabled 1px solid;
     font-weight: 400;
     display: flex;
     align-items: center;
@@ -115,7 +114,7 @@ $sliderHeight: 10px;
   height: $sliderHeight;
   width: $sliderHeight;
   left: 1px;
-  bottom: 5%;
+  bottom: 1px;
   background-color: white;
   -webkit-transition: .4s;
   transition: .4s;
@@ -156,7 +155,7 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
-.listItem, .listItemRow {
+.listItem, .listItemRow, .download {
   font-size: $fontSizeSmall;
   box-sizing: border-box;
   width: 100%;
@@ -167,6 +166,33 @@ input:checked + .slider:before {
   cursor: pointer;
   display: flex;
   align-items: center;
+}
+
+.download {
+  max-height: 1000px;
+  min-height: $rowHeight;
+  box-sizing: border-box;
+  border-top: $colorDisabled 1px solid;
+  display: flex;
+  justify-content: flex-end;
+  float: right;
+  &.inactive {
+    span, div {
+      opacity: 0.2;
+    }
+    pointer-events: none;
+    cursor: none;
+  }
+}
+
+.downloadIcon {
+  padding: 5px;
+  svg {
+    height: 12px;
+  }
+  path {
+    stroke: black;
+  }
 }
 
 .listItem, .categoryRow {

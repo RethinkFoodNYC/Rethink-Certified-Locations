@@ -24,3 +24,11 @@ export function distance(lat1, lon1, lat2, lon2) {
   dist = dist * 60 * 1.5; // this is a better approximation to the turf results
   return dist;
 }
+
+export function convertToTSV(data) {
+  const headers = Object.keys(data[0]);
+  const stringRows = data.map((row) => headers
+    .map((fieldName) => row[fieldName])
+    .join('\t'));
+  return ['data:text/csv;charset=utf-8,', headers.join('\t'), ...stringRows].join('\r\n');
+}
