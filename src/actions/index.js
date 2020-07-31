@@ -32,13 +32,12 @@ export const initCategories = (categories) => ({
 export const UPDATE_VISIBLE_STATUS = 'UPDATE_VISIBLE_STATUS';
 export const updateVisible = (category, status) => ({
   type: UPDATE_VISIBLE_STATUS,
-  category: category,
-  status: status,
+  category,
+  status,
 });
 
 export const UPDATE_TOGGLE_STATUS = 'UPDATE_TOGGLE_STATUS';
-export const updateToggle = (category, status) => ({
+export const updateToggle = (category) => ({
   type: UPDATE_TOGGLE_STATUS,
-  category,
-  status,
+  category, // input here needs to tell the toggle the category and open/close
 });
