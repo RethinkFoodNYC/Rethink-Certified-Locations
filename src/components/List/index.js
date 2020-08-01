@@ -4,7 +4,7 @@ import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS } from '../../globals/constants';
-import { getUniqueID, convertToTSV } from '../../globals/helpers';
+import { getUniqueID, removeStatus, convertToTSV } from '../../globals/helpers';
 
 export default class List {
   constructor(store, globalUpdate) {
@@ -36,6 +36,7 @@ export default class List {
       .selectAll('div.wrapper')
       .data(data)
       .join('div')
+      .sort((a, b) => ascending(a[0], b[0]))
       .attr('class', 'wrapper');
 
     this.categoryRow = this.wrapper
@@ -77,7 +78,7 @@ export default class List {
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      .style('background-color', ([category]) => COLORS[category]);
+      .style('background-color', ([category]) => COLORS[removeStatus(category)]);
 
     this.body = this.wrapper
       .append('div')

@@ -4,6 +4,10 @@ export function getUniqueID(data) {
   return `${data[K.NAME].replace(/\s/g, '')}_${data[K.LONG]}_${data[K.LAT]}`;
 }
 
+export function removeStatus(str) {
+  return str.split(' ').slice(1).join(' ');
+}
+
 // source of below: https://www.geodatasource.com/developers/javascript
 export function distance(lat1, lon1, lat2, lon2) {
   const pi = 3.14159265358979323846;
