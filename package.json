@@ -17,6 +17,7 @@
     "build": "parcel build index.html --public-url https://two-n.github.io/rethink-map/"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-geocoder": "^4.6.0",
     "@turf/buffer": "^5.1.5",
     "@turf/points-within-polygon": "^5.1.5",
     "csv2geojson": "^5.1.1",

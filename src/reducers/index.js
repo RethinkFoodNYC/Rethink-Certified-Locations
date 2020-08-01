@@ -19,6 +19,8 @@ export default function reducer(state = initialState, action) {
       return { ...state, [S.DATA]: [] };
     case A.SET_SELECTED:
       return { ...state, [S.SELECTED]: action.data };
+    case A.SET_SELECTED_ID:
+      return { ...state, [S.SELECTED]: action.data };
     case A.INIT_CATEGORIES: {
       const obj = action.data.reduce((acc, cat) => ({
         ...acc,

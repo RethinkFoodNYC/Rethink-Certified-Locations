@@ -23,6 +23,12 @@ export const setSelected = (dataPoint) => ({
   data: dataPoint === null ? null : getUniqueID(dataPoint),
 });
 
+export const SET_SELECTED_ID = 'SET_SELECTED_ID';
+export const setSelectedId = (id) => ({
+  type: SET_SELECTED_ID,
+  data: id,
+});
+
 export const INIT_CATEGORIES = 'INIT_CATEGORIES';
 export const initCategories = (categories) => ({
   type: INIT_CATEGORIES,
