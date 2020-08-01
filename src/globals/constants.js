@@ -8,7 +8,7 @@ export const STATE = {
 };
 
 export const COLORS = {
-  RRP: '#e629af',
+  'Food Partner': '#e629af',
   CBOs: '#e38944',
 };
 
@@ -18,6 +18,7 @@ export const KEYS = {
   NAME: 'Name',
   CONTACT_E: 'Contact Email',
   INFO: 'Number of Meals',
+  STATUS: 'Status',
   FADD: 'Formatted Address',
   LAT: 'Latitude',
   LONG: 'Longitude',

@@ -112,7 +112,7 @@ export default class GoogleAuth {
         [])
         // filter out any values without lat/long
         .filter((row) => row[K.LAT] !== undefined && row[K.LONG] !== undefined);
-      this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
+      this.onReceiveData(groups(parsed, (d) => `${d[K.STATUS]} ${d[K.CAT]}`));
     });
   }
 }
