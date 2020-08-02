@@ -3,6 +3,7 @@ import { groups } from 'd3-array';
 import config from './config.json';
 import './style.scss';
 import { KEYS as K } from '../../globals/constants';
+import { concatCatgStatus } from '../../globals/helpers';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
 
@@ -112,7 +113,9 @@ export default class GoogleAuth {
         [])
         // filter out any values without lat/long
         .filter((row) => row[K.LAT] !== undefined && row[K.LONG] !== undefined);
-      this.onReceiveData(groups(parsed, (d) => `${d[K.STATUS]} ${d[K.CAT]}`));
+      this.onReceiveData(groups(parsed, concatCatgStatus));
+      // this.onReceiveData(groups(parsed, (d) => [d[K.STATUS], d[K.CAT]]));
+      // this.onReceiveData(groups(parsed, (d) => d[K.STATUS], (d) => d[K.CAT]));
     });
   }
 }

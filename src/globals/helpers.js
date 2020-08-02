@@ -4,8 +4,14 @@ export function getUniqueID(data) {
   return `${data[K.NAME].replace(/\s/g, '')}_${data[K.LONG]}_${data[K.LAT]}`;
 }
 
-export function removeStatus(str) {
-  return str.split(' ').slice(1).join(' ');
+export function parseCatgStatus(str, need) {
+  const index = need === 'status' ? -1 : 1;
+  console.log(need, str.split(' ').slice(index).join(' '));
+  return str.split(' ').slice(index).join(' ');
+}
+
+export function concatCatgStatus(data) {
+  return `${data[K.STATUS]} ${data[K.CAT]}`;
 }
 
 // source of below: https://www.geodatasource.com/developers/javascript

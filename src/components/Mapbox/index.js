@@ -5,7 +5,7 @@ import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID } from '../../globals/helpers';
+import { getUniqueID, concatStatus } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -79,6 +79,7 @@ export default class Mapbox {
     // add hover behavior to each element
     this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
+      el.classList.add('potential', dataPoint[K.STATUS] === 'potential');
       el.addEventListener('click', () => {
         this.store.dispatch(Act.setSelected(dataPoint));
         this.globalUpdate();
@@ -176,7 +177,7 @@ export default class Mapbox {
 
   toggleVisibility(status) {
     // map over markers and turn off / on according to toggle
-    this.markers.forEach(([marker, data], uniqueID) => select(marker.getElement()).classed('off', !status[data[K.CAT]]));
+    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatStatus(data)]));
   }
 
   draw() {

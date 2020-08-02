@@ -9,6 +9,12 @@
 
 }
 
+.potential > svg {
+  g {
+    opacity: 0.75;
+  }
+}
+
 .hide > svg {
   g {
     fill: lightgrey;

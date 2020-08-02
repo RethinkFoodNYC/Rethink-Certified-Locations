@@ -4,7 +4,7 @@ import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS } from '../../globals/constants';
-import { getUniqueID, removeStatus, convertToTSV } from '../../globals/helpers';
+import { getUniqueID, parseCatgStatus, convertToTSV, concatCatgStatus } from '../../globals/helpers';
 
 export default class List {
   constructor(store, globalUpdate) {
@@ -78,7 +78,8 @@ export default class List {
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      .style('background-color', ([category]) => COLORS[removeStatus(category)]);
+      .attr('opacity', ([category]) => parseCatgStatus(category, 'status') === 'potential' ? 0.75 : 1)
+      .style('background-color', ([category]) => COLORS[parseCatgStatus(category, 'category')]);
 
     this.body = this.wrapper
       .append('div')
