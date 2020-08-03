@@ -7,6 +7,7 @@ const initialState = {
   [S.VISIBLE_STATUS]: [], // is the corresponding data point open in the list? i.e. determines if height = 0 for list view
   [S.TOGGLE_STATUS]: [], // layer visibility & list view toggle on/off
   [S.SELECTED]: null, // this will be the selected point
+  [S.BUFFER_RAD]: 1,
 };
 
 export default function reducer(state = initialState, action) {
@@ -21,6 +22,8 @@ export default function reducer(state = initialState, action) {
       return { ...state, [S.SELECTED]: action.data };
     case A.SET_SELECTED_ID:
       return { ...state, [S.SELECTED]: action.data };
+    case A.SET_RADIUS:
+      return { ...state, [S.BUFFER_RAD]: action.data };
     case A.INIT_CATEGORIES: {
       const obj = action.data.reduce((acc, cat) => ({
         ...acc,

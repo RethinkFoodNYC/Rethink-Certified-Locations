@@ -1,13 +1,12 @@
 import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
-import turf from 'turf';
-import buffer from '@turf/buffer';
+import { point as turfPoint, circle, turfBbox } from '@turf/turf';
 import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID, convertToCarmen } from '../../globals/helpers';
+import { getUniqueID, convertToCarmen, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -26,12 +25,15 @@ const descriptionGenerator = (pointData) => `
   <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
-  constructor(store, globalUpdate) {
+  constructor(store, globalUpdate, updateRangeRadius) {
     this.initializeMap();
     this.store = store;
     this.globalUpdate = globalUpdate;
+    this.updateRangeRadius = updateRangeRadius;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
   }
 
   initializeMap() {
@@ -42,21 +44,75 @@ export default class Mapbox {
       center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
+    // console.log(this.canvas, this.map.getCanvas);
 
     this.nav = new mapboxgl.NavigationControl();
     this.map.addControl(this.nav, 'bottom-right');
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
+
+      this.map.on('mouseenter', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+
+      this.map.on('mouseleave', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+
+      this.map.on('mousedown', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.getCanvas().style.cursor = 'grab';
+        this.map.on('mousemove', this.onMove);
+        this.map.once('mouseup', this.onUp);
+      });
+
+      this.map.on('touchstart', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.on('touchmove', this.onMove);
+        this.map.once('touchend', this.onUp);
+      });
     });
 
     this.map.on('click', (e) => {
       // if you click on the canvas instead of a path/marker
       if (e.originalEvent.target.className === 'mapboxgl-canvas') {
-        this.store.dispatch(Act.setSelected(null));
+        this.store.dispatch(Act.setSelected(null)); // remove selected
+        this.store.dispatch(Act.setBufferRadius(1)); // reset buffer size
+        this.updateRangeRadius(1);
         this.globalUpdate();
       }
     });
+  }
+
+  onMove(e) {
+    const coords = e.lngLat;
+
+    // Set a UI indicator for dragging.
+    this.map.getCanvas().style.cursor = 'grabbing';
+
+    // update buffer as mouse is moving
+    const selected = Sel.getSelected(this.store.getState());
+    this.bufferDist = calculateDistance(
+      [selected[K.LONG], selected[K.LAT]],
+      [coords.lng, coords.lat],
+    );
+    this.showBuffer(this.bufferDist);
+    this.updateRangeRadius(this.bufferDist);
+  }
+
+  onUp() {
+    this.map.getCanvas().style.cursor = '';
+
+    // Unbind mouse/touch events
+    this.map.off('touchmove', this.onMove);
+    this.map.off('mousemove', this.onMove);
+
+    // Update state with new buffer radius to start inBuffer
+    this.store.dispatch(Act.setBufferRadius(this.bufferDist));
+    this.globalUpdate();
   }
 
   /** Gets called externally from app once a user has logged in */
@@ -168,7 +224,7 @@ export default class Mapbox {
       marker.togglePopup();
 
       // add buffer
-      this.showBuffer(coordinates);
+      this.showBuffer(Sel.getBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
 
       // zoom to point
       this.map.flyTo({
@@ -180,10 +236,12 @@ export default class Mapbox {
     }
   }
 
-  showBuffer(coords) {
-    const point = turf.point(coords);
+  showBuffer(radius = 1) {
+    // need to pull so we can update locally with expanding buffer rather than re-draw
+    const selected = Sel.getSelected(this.store.getState());
+    const point = turfPoint([selected[K.LONG], selected[K.LAT]]);
     // create buffer
-    const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
+    const buffered = circle(point, radius, { units: 'miles', steps: 48 });
     this.map.getSource(this.BUFFER).setData(buffered);
   }
 
@@ -219,7 +277,7 @@ export default class Mapbox {
   }
 
   fitBounds(geojsonData) {
-    const bbox = turf.bbox(geojsonData);
+    const bbox = turfBbox(geojsonData);
     this.map.fitBounds(bbox, { padding: 50 });
   }
 }

@@ -18,8 +18,7 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^4.6.0",
-    "@turf/buffer": "^5.1.5",
-    "@turf/points-within-polygon": "^5.1.5",
+    "@turf/turf": "^5.1.6",
     "csv2geojson": "^5.1.1",
     "d3": "^5.16.0",
     "d3-array": "^2.4.0",
@@ -27,7 +26,6 @@
     "mapbox-gl": "^1.11.0",
     "redux": "^4.0.5",
     "regenerator-runtime": "^0.13.7",
-    "reselect": "^4.0.0",
-    "turf": "^3.0.14"
+    "reselect": "^4.0.0"
   }
 }
