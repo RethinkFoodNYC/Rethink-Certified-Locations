@@ -1,3 +1,4 @@
+import { point, distance } from '@turf/turf';
 import { KEYS as K } from './constants';
 
 export function getUniqueID(data) {
@@ -14,25 +15,11 @@ export function concatCatgStatus(data) {
   return `${data[K.STATUS]} ${data[K.CAT]}`;
 }
 
-// source of below: https://www.geodatasource.com/developers/javascript
-export function distance(lat1, lon1, lat2, lon2) {
-  const pi = 3.14159265358979323846;
-  if ((lat1 === lat2) && (lon1 === lon2)) {
-    return 0;
-  }
-  const radlat1 = pi * lat1 / 180;
-  const radlat2 = pi * lat2 / 180;
-  const theta = lon1 - lon2;
-  const radtheta = pi * theta / 180;
-  let dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-  if (dist > 1) {
-    dist = 1;
-  }
-  dist = Math.acos(dist);
-  dist = dist * 180 / pi;
-  // dist = dist * 60 * 1.1515; // in Miles
-  dist = dist * 60 * 1.5; // this is a better approximation to the turf results
-  return dist;
+export function calculateDistance(coords1, coords2) {
+  const from = point(coords1);
+  const to = point(coords2);
+
+  return distance(from, to, { units: 'miles' });
 }
 
 export function convertToTSV(data) {
@@ -41,4 +28,19 @@ export function convertToTSV(data) {
     .map((fieldName) => row[fieldName])
     .join('\t'));
   return ['data:text/csv;charset=utf-8,', headers.join('\t'), ...stringRows].join('\r\n');
+}
+
+export function convertToCarmen(d) {
+  const coords = [d[K.LONG], d[K.LAT]];
+  return ({
+    type: 'Feature',
+    id: getUniqueID(d),
+    place_name: `${d[K.NAME]} (${d[K.CAT]})`,
+    address: d[K.FADD],
+    center: coords,
+    geometry: {
+      type: 'Point',
+      coordinates: coords,
+    },
+  });
 }

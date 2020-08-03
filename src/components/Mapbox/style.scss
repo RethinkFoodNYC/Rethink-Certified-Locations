@@ -15,6 +15,10 @@
   }
 }
 
+.mapboxgl-ctrl-top-right {
+  top: 60px !important; // override default styling to move below header
+}
+
 .hide > svg {
   g {
     fill: lightgrey;

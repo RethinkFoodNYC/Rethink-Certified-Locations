@@ -11,6 +11,7 @@ export default class List {
     this.store = store;
     this.globalUpdate = globalUpdate;
     this.loadIcons();
+    this.updateRangeRadius = this.updateRangeRadius.bind(this);
   }
 
   async loadIcons() {
@@ -24,6 +25,7 @@ export default class List {
   addData() {
     // get data from store
     const data = Sel.getData(this.store.getState());
+    const bufferRadius = Sel.getBufferRadius(this.store.getState());
 
     // dynamically add all categories to store as "on"
     this.store.dispatch(Act.initCategories(
@@ -89,6 +91,7 @@ export default class List {
       .selectAll('div.listItem')
       .data(([, items]) => items)
       .join('div')
+      .sort((a, b) => ascending(a[K.NAME], b[K.NAME]))
       .attr('class', 'listItemRow')
       .attr('data-id', (d) => getUniqueID(d));
 
@@ -118,13 +121,22 @@ export default class List {
       .attr('width', '60px')
       .attr('height', '60px');
 
-    this.downloadLink = parent
+    this.bufferInfo = parent
+      .append('div')
+      .attr('class', 'buffer-info');
+
+    this.radiusRow = this.bufferInfo
+      .append('div')
+      .attr('class', 'radius')
+      .text(`Range radius: ${format('.1f')(bufferRadius)} miles`);
+
+    this.downloadLink = this.bufferInfo
       .append('div')
       .attr('class', 'download inactive'); // start as inactive
 
     this.downloadLink
       .append('span')
-      .text('download data within range')
+      .text('Download range data')
       .on('click', () => this.download());
 
     this.downloadLink
@@ -160,6 +172,11 @@ export default class List {
     }
   }
 
+  updateRangeRadius(range) {
+    this.radiusRow
+      .text(`Range radius: ${format('.1f')(range)} miles`);
+  }
+
   draw() {
     const selected = Sel.getSelectedUniqueID(this.store.getState());
     const inBuffer = Sel.getInBuffer(this.store.getState());
@@ -185,10 +202,14 @@ export default class List {
       this.listItems
         .sort((a, b) => ascending(distances.get(getUniqueID(a)), distances.get(getUniqueID(b))));
       this.listItemDistance
-        .text((d) => `${format('.1f')((distances.get(getUniqueID(d))))} mi`);
+        .text((d) => {
+          if (distances.has(getUniqueID(d))) {
+            return `${format('.1f')((distances.get(getUniqueID(d))))} mi`;
+          }
+          return '';
+        });
     } else {
       this.listItems
-        .data(([, items]) => items)
         .sort((a, b) => ascending(a[K.NAME], b[K.NAME]));
       this.listItemDistance
         .text('');

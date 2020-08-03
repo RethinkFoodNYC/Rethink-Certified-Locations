@@ -5,6 +5,7 @@ export const STATE = {
   TOGGLE_STATUS: 'toggleStatus',
   IN_BUFFER: 'inBuffer',
   SELECTED: 'selected',
+  BUFFER_RAD: 'bufferRadius',
 };
 
 export const COLORS = {
