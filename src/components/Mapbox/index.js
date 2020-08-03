@@ -6,7 +6,7 @@ import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID, concatStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
+import { getUniqueID, concatCatgStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -15,9 +15,9 @@ const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordina
 const descriptionGenerator = (pointData) => `
   <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
   <br> <span> <b> ${pointData[K.NAME]}</b></span> 
-  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
+  <br> <span> <b> ${[K.FADD]}: </b>${pointData[K.FADD]}</span> 
+  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>
+  <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
 
 export default class Mapbox {
   constructor(store, globalUpdate, updateRangeRadius) {
@@ -163,7 +163,6 @@ export default class Mapbox {
     // add hover behavior to each element
     this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
-      el.classList.add('potential', dataPoint[K.STATUS] === 'potential');
       el.addEventListener('click', () => {
         this.store.dispatch(Act.setSelected(dataPoint));
         this.globalUpdate();
@@ -263,7 +262,7 @@ export default class Mapbox {
 
   toggleVisibility(status) {
     // map over markers and turn off / on according to toggle
-    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatStatus(data)]));
+    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatCatgStatus(data)]));
   }
 
   draw() {

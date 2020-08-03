@@ -4,7 +4,9 @@ import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS } from '../../globals/constants';
-import { getUniqueID, parseCatgStatus, convertToTSV, concatCatgStatus } from '../../globals/helpers';
+import {
+  getUniqueID, parseCategory, convertToTSV,
+} from '../../globals/helpers';
 
 export default class List {
   constructor(store, globalUpdate) {
@@ -52,7 +54,7 @@ export default class List {
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([category, items]) => `<span><span class="name">${category}</span> <span class="count">(${items.length})</span> `)
+      .html(([statusCategory, items]) => `<span><span class="name">${statusCategory}</span> <span class="count">(${items.length})</span> `)
       .on('click', function () {
         this.parentNode.parentNode.classList.toggle('isOpen');
       });
@@ -74,14 +76,14 @@ export default class List {
       .data((d) => [d])
       .join('input')
       .attr('type', 'checkbox')
-      .attr('id', ([category]) => category)
-      .on('click', ([category]) => this.toggleCategory(category));
+      .attr('id', ([statusCategory]) => statusCategory)
+      .on('click', ([statusCategory]) => this.toggleCategory(statusCategory));
 
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      .attr('opacity', ([category]) => parseCatgStatus(category, 'status') === 'potential' ? 0.75 : 1)
-      .style('background-color', ([category]) => COLORS[parseCatgStatus(category, 'category')]);
+      // .attr('opacity', ([category]) => parseStatus(category) === 'potential' ? 0.75 : 1)
+      .style('background-color', ([statusCategory]) => COLORS[parseCategory(statusCategory)]);
 
     this.body = this.wrapper
       .append('div')
@@ -194,7 +196,7 @@ export default class List {
     // add in toggle class for gray styling
     this.switchEl
       .selectAll('span.slider')
-      .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
+      .classed('toggleStatusOff', ([statusCategory]) => !toggleStatus[statusCategory]);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected

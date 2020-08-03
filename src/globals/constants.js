@@ -9,7 +9,7 @@ export const STATE = {
 };
 
 export const COLORS = {
-  'Food Partner': '#e629af',
+  'Food Partners': '#e629af',
   CBOs: '#e38944',
 };
 
