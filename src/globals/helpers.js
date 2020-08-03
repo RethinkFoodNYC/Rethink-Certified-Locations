@@ -19,3 +19,18 @@ export function convertToTSV(data) {
     .join('\t'));
   return ['data:text/csv;charset=utf-8,', headers.join('\t'), ...stringRows].join('\r\n');
 }
+
+export function convertToCarmen(d) {
+  const coords = [d[K.LONG], d[K.LAT]];
+  return ({
+    type: 'Feature',
+    id: getUniqueID(d),
+    place_name: `${d[K.NAME]} (${d[K.CAT]})`,
+    address: d[K.FADD],
+    center: coords,
+    geometry: {
+      type: 'Point',
+      coordinates: coords,
+    },
+  });
+}

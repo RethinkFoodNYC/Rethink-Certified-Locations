@@ -1,10 +1,12 @@
 import mapboxgl from 'mapbox-gl';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import { point as turfPoint, circle, turfBbox } from '@turf/turf';
 import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID, calculateDistance } from '../../globals/helpers';
+import { getUniqueID, convertToCarmen, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
@@ -43,6 +45,9 @@ export default class Mapbox {
       zoom: 10, // starting zoom
     });
     // console.log(this.canvas, this.map.getCanvas);
+
+    this.nav = new mapboxgl.NavigationControl();
+    this.map.addControl(this.nav, 'bottom-right');
 
     this.map.on('load', () => {
       this.addBuffer(); // initializes data source and buffer layer scaffolding
@@ -114,6 +119,29 @@ export default class Mapbox {
   addData() {
     // get data from store
     const flatData = Sel.getFlatData(this.store.getState());
+
+    // geocoder needs data first
+    this.forwardGeocoder = (query) => flatData
+      .filter((d) => d[K.NAME].toLowerCase().search(query.toLowerCase()) !== -1)
+      .map((d) => convertToCarmen(d));
+
+    this.geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      localGeocoder: this.forwardGeocoder,
+      collapsed: true,
+      marker: false,
+      placeholder: 'CBO, Food Partner, or Map Position',
+      zoom: 12,
+      mapboxgl,
+    });
+
+    this.geocoder.on('result', (ev) => {
+      this.store.dispatch(Act.setSelectedId(ev.result.id));
+      this.globalUpdate();
+    });
+
+    // once data is loaded, add local query to geocoder
+    this.map.addControl(this.geocoder);
 
     this.markers = new Map(flatData.map((dataPoint) => {
       const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
