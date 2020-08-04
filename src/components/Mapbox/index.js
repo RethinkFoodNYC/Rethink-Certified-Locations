@@ -41,7 +41,6 @@ export default class Mapbox {
       center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
-    // console.log(this.canvas, this.map.getCanvas);
 
     this.nav = new mapboxgl.NavigationControl();
     this.map.addControl(this.nav, 'bottom-right');
@@ -148,12 +147,12 @@ export default class Mapbox {
         getUniqueID(dataPoint),
         [
           new mapboxgl.Marker({
-            color: COLORS[dataPoint[K.CAT]],
+            color: COLORS(dataPoint[K.CAT]),
             scale: 0.5,
           })
             .setLngLat(longLat)
             .setPopup(
-              new mapboxgl.Popup({ offset: 20 })
+              new mapboxgl.Popup({ offset: 20, closeOnClick: true, closeOnMove: false })
                 .setHTML(descriptionGenerator(dataPoint)),
             )
             .addTo(this.map),
@@ -166,11 +165,12 @@ export default class Mapbox {
     this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
       el.addEventListener('click', () => {
+        if (!marker.getPopup().isOpen()) marker.togglePopup();
         this.store.dispatch(Act.setSelected(dataPoint));
         this.globalUpdate();
       });
-      el.addEventListener('mouseenter', () => marker.togglePopup());
-      el.addEventListener('mouseleave', () => marker.togglePopup());
+      el.addEventListener('mouseenter', () => { if (!marker.getPopup().isOpen()) marker.togglePopup(); });
+      el.addEventListener('mouseleave', () => { if (Sel.getSelectedUniqueID(this.store.getState()) !== getUniqueID(dataPoint)) marker.togglePopup(); });
     });
   }
 
