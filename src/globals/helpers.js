@@ -6,10 +6,11 @@ export function getUniqueID(data) {
 }
 
 export function parseCategory(str) {
-  return str.split(' ').slice(1).join(' ');
+  return str.replace(/Current |Potential /gmi, '');
 }
 
 export function concatCatgStatus(data) {
+  if (data[K.STATUS] === 'None') return data[K.CAT];
   return `${data[K.STATUS]} ${data[K.CAT]}`;
 }
 

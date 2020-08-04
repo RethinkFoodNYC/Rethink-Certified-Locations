@@ -163,7 +163,6 @@ input:checked + .slider:before {
   overflow: hidden; // TODO: figure out how to get ellipsis to work
   text-overflow: ellipsis; // still not working
   height:$rowHeight;
-  cursor: pointer;
   display: flex;
   align-items: center;
 }
@@ -171,7 +170,7 @@ input:checked + .slider:before {
 .buffer-info {
   display: block;
   max-height: 1000px;
-  min-height: fit-content;
+  min-height: 50px;
 }
 
 .radius, .download {
@@ -181,12 +180,12 @@ input:checked + .slider:before {
   display: flex;
   justify-content: flex-end;
   float: right;
+  cursor: pointer;
   &.inactive {
     span, div {
       opacity: 0.2;
     }
     pointer-events: none;
-    cursor: none;
   }
 }
 
