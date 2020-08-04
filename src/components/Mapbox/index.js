@@ -6,23 +6,20 @@ import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID, convertToCarmen, calculateDistance } from '../../globals/helpers';
+import { getUniqueID, concatCatgStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
-const catLookup = {
-  RRP: 'rrp',
-  CBOs: 'cbo', // apply small-caps formatting in CSS
-};
-
 const descriptionGenerator = (pointData) => `
-  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS(pointData[K.CAT])}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
   <br> <span> <b> ${pointData[K.NAME]}</b></span> 
-  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
+  <br> <span> <b> ${[K.NUM_MEALS]}: </b>${pointData[K.NUM_MEALS]}</span>
+  <br> <span> <b> ${[K.CUISINE]}: </b>${pointData[K.CUISINE]}</span>
+  <br> <span> <b> Contact </b>${pointData[K.CONTACT_FN]} ${pointData[K.CONTACT_LN]}</span>
+  <br> <span> <b> ${[K.CONTACT_P]}: </b>${pointData[K.CONTACT_P]}</span>
+  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>`;
 
 export default class Mapbox {
   constructor(store, globalUpdate, updateRangeRadius) {
@@ -44,14 +41,10 @@ export default class Mapbox {
       center: [-74.009914, 40.7440], // starting position, Hoboken (offset for list view)
       zoom: 10, // starting zoom
     });
-    // console.log(this.canvas, this.map.getCanvas);
 
     this.nav = new mapboxgl.NavigationControl();
-    this.map.addControl(this.nav, 'bottom-right');
 
     this.map.on('load', () => {
-      this.addBuffer(); // initializes data source and buffer layer scaffolding
-
       this.map.on('mouseenter', this.BUFFER, () => {
         this.map.getCanvas().style.cursor = 'pointer';
       });
@@ -117,8 +110,12 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData() {
+    this.addBuffer();
     // get data from store
     const flatData = Sel.getFlatData(this.store.getState());
+    const flatDataMap = Sel.getFlatDataMap(this.store.getState());
+    const data = [...(new Set(flatData.map((d) => getUniqueID(d))))]
+      .map((id) => flatDataMap.get(id)); // remove dups, return data
 
     // geocoder needs data first
     this.forwardGeocoder = (query) => flatData
@@ -143,7 +140,7 @@ export default class Mapbox {
     // once data is loaded, add local query to geocoder
     this.map.addControl(this.geocoder);
 
-    this.markers = new Map(flatData.map((dataPoint) => {
+    this.markers = new Map(data.map((dataPoint) => {
       const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
         ? [dataPoint[K.LONG], dataPoint[K.LAT]]
         : [0, 0];
@@ -151,12 +148,12 @@ export default class Mapbox {
         getUniqueID(dataPoint),
         [
           new mapboxgl.Marker({
-            color: COLORS[dataPoint[K.CAT]],
+            color: COLORS(dataPoint[K.CAT]),
             scale: 0.5,
           })
             .setLngLat(longLat)
             .setPopup(
-              new mapboxgl.Popup({ offset: 20 })
+              new mapboxgl.Popup({ offset: 20, closeOnClick: true, closeOnMove: false })
                 .setHTML(descriptionGenerator(dataPoint)),
             )
             .addTo(this.map),
@@ -169,11 +166,12 @@ export default class Mapbox {
     this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
       el.addEventListener('click', () => {
+        if (!marker.getPopup().isOpen()) marker.togglePopup();
         this.store.dispatch(Act.setSelected(dataPoint));
         this.globalUpdate();
       });
-      el.addEventListener('mouseenter', () => marker.togglePopup());
-      el.addEventListener('mouseleave', () => marker.togglePopup());
+      el.addEventListener('mouseenter', () => { if (!marker.getPopup().isOpen()) marker.togglePopup(); });
+      el.addEventListener('mouseleave', () => { if (Sel.getSelectedUniqueID(this.store.getState()) !== getUniqueID(dataPoint)) marker.togglePopup(); });
     });
   }
 
@@ -267,7 +265,7 @@ export default class Mapbox {
 
   toggleVisibility(status) {
     // map over markers and turn off / on according to toggle
-    this.markers.forEach(([marker, data], uniqueID) => select(marker.getElement()).classed('off', !status[data[K.CAT]]));
+    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatCatgStatus(data)]));
   }
 
   draw() {

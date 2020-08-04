@@ -4,7 +4,9 @@ import { ascending } from 'd3-array';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { KEYS as K, COLORS } from '../../globals/constants';
-import { getUniqueID, convertToTSV } from '../../globals/helpers';
+import {
+  getUniqueID, parseCategory, convertToTSV,
+} from '../../globals/helpers';
 
 export default class List {
   constructor(store, globalUpdate) {
@@ -38,6 +40,7 @@ export default class List {
       .selectAll('div.wrapper')
       .data(data)
       .join('div')
+      .sort((a, b) => ascending(a[0], b[0]))
       .attr('class', 'wrapper');
 
     this.categoryRow = this.wrapper
@@ -51,7 +54,7 @@ export default class List {
       .data((d) => [d])
       .join('div')
       .attr('class', 'category')
-      .html(([category, items]) => `<span><span class="name">${category}</span> <span class="count">(${items.length})</span> `)
+      .html(([statusCategory, items]) => `<span><span class="name">${statusCategory}</span> <span class="count">(${items.length})</span> `)
       .on('click', function () {
         this.parentNode.parentNode.classList.toggle('isOpen');
       });
@@ -73,13 +76,13 @@ export default class List {
       .data((d) => [d])
       .join('input')
       .attr('type', 'checkbox')
-      .attr('id', ([category]) => category)
-      .on('click', ([category]) => this.toggleCategory(category));
+      .attr('id', ([statusCategory]) => statusCategory)
+      .on('click', ([statusCategory]) => this.toggleCategory(statusCategory));
 
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      .style('background-color', ([category]) => COLORS[category]);
+      .style('background-color', ([statusCategory]) => COLORS(parseCategory(statusCategory)));
 
     this.body = this.wrapper
       .append('div')
@@ -99,9 +102,9 @@ export default class List {
       .html(this.mapIcon)
       .attr('width', '30px')
       .attr('height', '30px')
-      .style('stroke', (d) => COLORS[d[K.CAT]])
+      .style('stroke', (d) => COLORS(d[K.CAT]))
       .select('.map-point')
-      .style('fill', (d) => COLORS[d[K.CAT]]);
+      .style('fill', (d) => COLORS(d[K.CAT]));
 
     this.listItems
       .append('span')
@@ -141,6 +144,7 @@ export default class List {
       .append('div')
       .attr('class', 'downloadIcon')
       .html(this.downloadIcon)
+      .on('click', () => this.download())
       .attr('width', '30px')
       .attr('height', '30px');
   }
@@ -165,9 +169,8 @@ export default class List {
 
   removeData() {
     // console.log('data removed from list');
-    if (this.wrapper) {
-      this.wrapper.remove();
-    }
+    if (this.wrapper) this.wrapper.remove();
+    if (this.bufferInfo) this.bufferInfo.remove();
   }
 
   updateRangeRadius(range) {
@@ -192,7 +195,7 @@ export default class List {
     // add in toggle class for gray styling
     this.switchEl
       .selectAll('span.slider')
-      .classed('toggleStatusOff', ([category]) => !toggleStatus[category]);
+      .classed('toggleStatusOff', ([statusCategory]) => !toggleStatus[statusCategory]);
 
     // add distance to list and sort in ascending order from selected point;
     // remove distance when no point is selected

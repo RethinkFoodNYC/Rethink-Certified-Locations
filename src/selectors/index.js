@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { calculateDistance, getUniqueID } from '../globals/helpers';
+import { calculateDistance, getUniqueID, concatCatgStatus } from '../globals/helpers';
 import { KEYS as K, STATE as S } from '../globals/constants';
 
 /** Basic Selectors */
@@ -32,7 +32,7 @@ export const getDistances = createSelector([
   }
   const selected = flatDataMap.get(selectedID);
   return new Map([...flatDataMap]
-    .filter(([, d]) => toggleStatus[d[K.CAT]])
+    .filter(([, d]) => toggleStatus[concatCatgStatus(d)])
     .map(([uniqueID, d]) => {
       const dist = calculateDistance(
         [selected[K.LONG], selected[K.LAT]],

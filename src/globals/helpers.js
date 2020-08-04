@@ -5,6 +5,15 @@ export function getUniqueID(data) {
   return `${data[K.NAME].replace(/\s/g, '')}_${data[K.LONG]}_${data[K.LAT]}`;
 }
 
+export function parseCategory(str) {
+  return str.replace(/Current |Potential /gmi, '');
+}
+
+export function concatCatgStatus(data) {
+  if (data[K.STATUS] === 'None') return data[K.CAT];
+  return `${data[K.STATUS]} ${data[K.CAT]}`;
+}
+
 export function calculateDistance(coords1, coords2) {
   const from = point(coords1);
   const to = point(coords2);

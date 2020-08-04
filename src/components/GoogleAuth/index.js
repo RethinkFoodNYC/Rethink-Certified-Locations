@@ -3,6 +3,7 @@ import { groups } from 'd3-array';
 import config from './config.json';
 import './style.scss';
 import { KEYS as K } from '../../globals/constants';
+import { concatCatgStatus } from '../../globals/helpers';
 
 // REFERENCE: https://developers.google.com/sheets/api/quickstart/js
 
@@ -31,6 +32,7 @@ export default class GoogleAuth {
   setupButtons() {
     this.googleButtons = select('#google-buttons').selectAll('button')
       .data([
+        { text: 'Open Sheet', callback: this.openSpreadsheet, class: 'openData' },
         { text: 'Sign In', callback: this.handleAuthClick, class: 'signIn' },
         { text: 'Sign Out', callback: this.handleSignoutClick, class: 'signOut' }])
       .join('button')
@@ -94,6 +96,13 @@ export default class GoogleAuth {
     gapi.auth2.getAuthInstance().signOut();
   }
 
+  /**
+   *  Sign out the user upon button click.
+   */
+  openSpreadsheet() {
+    window.open(`https://docs.google.com/spreadsheets/d/${config.GOOGLE_SPREADSHEET_ID}/`, '_blank');
+  }
+
   pullData() {
     // TODO: generalize this to be able to handle multiple sheets if needed
     gapi.client.sheets.spreadsheets.values.get({
@@ -112,7 +121,7 @@ export default class GoogleAuth {
         [])
         // filter out any values without lat/long
         .filter((row) => row[K.LAT] !== undefined && row[K.LONG] !== undefined);
-      this.onReceiveData(groups(parsed, (d) => d[K.CAT]));
+      this.onReceiveData(groups(parsed, concatCatgStatus));
     });
   }
 }
