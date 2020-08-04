@@ -160,8 +160,7 @@ input:checked + .slider:before {
   box-sizing: border-box;
   width: 100%;
   white-space: nowrap;
-  overflow: hidden; // TODO: figure out how to get ellipsis to work
-  text-overflow: ellipsis; // still not working
+  overflow: hidden;
   height:$rowHeight;
   display: flex;
   align-items: center;
