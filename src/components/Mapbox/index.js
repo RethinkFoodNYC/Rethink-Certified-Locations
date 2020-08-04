@@ -43,11 +43,8 @@ export default class Mapbox {
     });
 
     this.nav = new mapboxgl.NavigationControl();
-    this.map.addControl(this.nav, 'bottom-right');
 
     this.map.on('load', () => {
-      this.addBuffer(); // initializes data source and buffer layer scaffolding
-
       this.map.on('mouseenter', this.BUFFER, () => {
         this.map.getCanvas().style.cursor = 'pointer';
       });
@@ -113,8 +110,12 @@ export default class Mapbox {
 
   /** Gets called externally from app once a user has logged in */
   addData() {
+    this.addBuffer();
     // get data from store
     const flatData = Sel.getFlatData(this.store.getState());
+    const flatDataMap = Sel.getFlatDataMap(this.store.getState());
+    const data = [...(new Set(flatData.map((d) => getUniqueID(d))))]
+      .map((id) => flatDataMap.get(id)); // remove dups, return data
 
     // geocoder needs data first
     this.forwardGeocoder = (query) => flatData
@@ -139,7 +140,7 @@ export default class Mapbox {
     // once data is loaded, add local query to geocoder
     this.map.addControl(this.geocoder);
 
-    this.markers = new Map(flatData.map((dataPoint) => {
+    this.markers = new Map(data.map((dataPoint) => {
       const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
         ? [dataPoint[K.LONG], dataPoint[K.LAT]]
         : [0, 0];

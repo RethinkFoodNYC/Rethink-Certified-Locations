@@ -169,9 +169,8 @@ export default class List {
 
   removeData() {
     // console.log('data removed from list');
-    if (this.wrapper) {
-      this.wrapper.remove();
-    }
+    if (this.wrapper) this.wrapper.remove();
+    if (this.bufferInfo) this.bufferInfo.remove();
   }
 
   updateRangeRadius(range) {
