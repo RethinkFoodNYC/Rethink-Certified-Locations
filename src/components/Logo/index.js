@@ -8,8 +8,7 @@ export default class Logo {
         parent
             .append('a')
             .attr('class', 'twonlogo')
-            .attr('href', 'https://www.two-n.com/');
-
-        console.log('working');
+            .attr('href', 'http://www.two-n.com/')
+            .attr('target', '_blank');
     }
 }
