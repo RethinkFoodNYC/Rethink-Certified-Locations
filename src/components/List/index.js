@@ -82,8 +82,7 @@ export default class List {
     this.switchEl
       .append('span')
       .attr('class', 'slider round')
-      // .attr('opacity', ([category]) => parseStatus(category) === 'potential' ? 0.75 : 1)
-      .style('background-color', ([statusCategory]) => COLORS[parseCategory(statusCategory)]);
+      .style('background-color', ([statusCategory]) => COLORS(parseCategory(statusCategory)));
 
     this.body = this.wrapper
       .append('div')
@@ -103,9 +102,9 @@ export default class List {
       .html(this.mapIcon)
       .attr('width', '30px')
       .attr('height', '30px')
-      .style('stroke', (d) => COLORS[d[K.CAT]])
+      .style('stroke', (d) => COLORS(d[K.CAT]))
       .select('.map-point')
-      .style('fill', (d) => COLORS[d[K.CAT]]);
+      .style('fill', (d) => COLORS(d[K.CAT]));
 
     this.listItems
       .append('span')
@@ -145,6 +144,7 @@ export default class List {
       .append('div')
       .attr('class', 'downloadIcon')
       .html(this.downloadIcon)
+      .on('click', () => this.download())
       .attr('width', '30px')
       .attr('height', '30px');
   }

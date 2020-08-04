@@ -13,11 +13,13 @@ import './style.scss';
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
 const descriptionGenerator = (pointData) => `
-  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS(pointData[K.CAT])}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
   <br> <span> <b> ${pointData[K.NAME]}</b></span> 
-  <br> <span> <b> ${[K.FADD]}: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> ${[K.INFO]}: </b>${pointData[K.INFO]}</span>`;
+  <br> <span> <b> ${[K.NUM_MEALS]}: </b>${pointData[K.NUM_MEALS]}</span>
+  <br> <span> <b> ${[K.CUISINE]}: </b>${pointData[K.CUISINE]}</span>
+  <br> <span> <b> Contact </b>${pointData[K.CONTACT_FN]} ${pointData[K.CONTACT_LN]}</span>
+  <br> <span> <b> ${[K.CONTACT_P]}: </b>${pointData[K.CONTACT_P]}</span>
+  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>`;
 
 export default class Mapbox {
   constructor(store, globalUpdate, updateRangeRadius) {
