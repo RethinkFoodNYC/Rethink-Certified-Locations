@@ -1,35 +1,36 @@
 import mapboxgl from 'mapbox-gl';
-import turf from 'turf';
-import buffer from '@turf/buffer';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
+import { point as turfPoint, circle, turfBbox } from '@turf/turf';
+import { select } from 'd3';
 import { KEYS as K, COLORS } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
-import { getUniqueID } from '../../globals/helpers';
+import { getUniqueID, concatCatgStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
 
 import './style.scss';
 
-
 const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} };
 
-const catLookup = {
-  RRP: 'rrp',
-  CBOs: 'cbo', // apply small-caps formatting in CSS
-};
-
 const descriptionGenerator = (pointData) => `
-  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS[pointData[K.CAT]]}"> <b>${catLookup[pointData[K.CAT]]}</b> </span> 
+  <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS(pointData[K.CAT])}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
   <br> <span> <b> ${pointData[K.NAME]}</b></span> 
-  <br> <span> <b> Address: </b>${pointData[K.FADD]}</span> 
-  <br> <span> <b> Contact: </b>${pointData[K.CONTACT_E]}</span>
-  <br> <span> <b> Information: </b>${pointData[K.INFO]}</span>`;
+  <br> <span> <b> ${[K.NUM_MEALS]}: </b>${pointData[K.NUM_MEALS]}</span>
+  <br> <span> <b> ${[K.CUISINE]}: </b>${pointData[K.CUISINE]}</span>
+  <br> <span> <b> Contact </b>${pointData[K.CONTACT_FN]} ${pointData[K.CONTACT_LN]}</span>
+  <br> <span> <b> ${[K.CONTACT_P]}: </b>${pointData[K.CONTACT_P]}</span>
+  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>`;
 
 export default class Mapbox {
-  constructor(store, globalUpdate) {
+  constructor(store, globalUpdate, updateRangeRadius) {
     this.initializeMap();
     this.store = store;
     this.globalUpdate = globalUpdate;
+    this.updateRangeRadius = updateRangeRadius;
     this.BUFFER = 'buffer';
     this.BUFFERLINE = 'buffer-outline';
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
   }
 
   initializeMap() {
@@ -41,25 +42,105 @@ export default class Mapbox {
       zoom: 10, // starting zoom
     });
 
+    this.nav = new mapboxgl.NavigationControl();
+
     this.map.on('load', () => {
-      this.addBuffer(); // initializes data source and buffer layer scaffolding
+      this.map.on('mouseenter', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+
+      this.map.on('mouseleave', this.BUFFER, () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+
+      this.map.on('mousedown', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.getCanvas().style.cursor = 'grab';
+        this.map.on('mousemove', this.onMove);
+        this.map.once('mouseup', this.onUp);
+      });
+
+      this.map.on('touchstart', this.BUFFER, (e) => {
+        // Prevent the default map drag behavior.
+        e.preventDefault();
+        this.map.on('touchmove', this.onMove);
+        this.map.once('touchend', this.onUp);
+      });
     });
 
     this.map.on('click', (e) => {
       // if you click on the canvas instead of a path/marker
       if (e.originalEvent.target.className === 'mapboxgl-canvas') {
-        this.store.dispatch(Act.setSelected(null));
+        this.store.dispatch(Act.setSelected(null)); // remove selected
+        this.store.dispatch(Act.setBufferRadius(1)); // reset buffer size
+        this.updateRangeRadius(1);
         this.globalUpdate();
       }
     });
   }
 
+  onMove(e) {
+    const coords = e.lngLat;
+
+    // Set a UI indicator for dragging.
+    this.map.getCanvas().style.cursor = 'grabbing';
+
+    // update buffer as mouse is moving
+    const selected = Sel.getSelected(this.store.getState());
+    this.bufferDist = calculateDistance(
+      [selected[K.LONG], selected[K.LAT]],
+      [coords.lng, coords.lat],
+    );
+    this.showBuffer(this.bufferDist);
+    this.updateRangeRadius(this.bufferDist);
+  }
+
+  onUp() {
+    this.map.getCanvas().style.cursor = '';
+
+    // Unbind mouse/touch events
+    this.map.off('touchmove', this.onMove);
+    this.map.off('mousemove', this.onMove);
+
+    // Update state with new buffer radius to start inBuffer
+    this.store.dispatch(Act.setBufferRadius(this.bufferDist));
+    this.globalUpdate();
+  }
+
   /** Gets called externally from app once a user has logged in */
   addData() {
+    this.addBuffer();
     // get data from store
     const flatData = Sel.getFlatData(this.store.getState());
+    const flatDataMap = Sel.getFlatDataMap(this.store.getState());
+    const data = [...(new Set(flatData.map((d) => getUniqueID(d))))]
+      .map((id) => flatDataMap.get(id)); // remove dups, return data
 
-    this.markers = new Map(flatData.map((dataPoint) => {
+    // geocoder needs data first
+    this.forwardGeocoder = (query) => flatData
+      .filter((d) => d[K.NAME].toLowerCase().search(query.toLowerCase()) !== -1)
+      .map((d) => convertToCarmen(d));
+
+    this.geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      localGeocoder: this.forwardGeocoder,
+      collapsed: true,
+      marker: false,
+      placeholder: 'CBO, Food Partner, or Map Position',
+      zoom: 12,
+      mapboxgl,
+    });
+
+    this.geocoder.on('result', (ev) => {
+      this.store.dispatch(Act.setSelectedId(ev.result.id));
+      this.globalUpdate();
+    });
+
+    // once data is loaded, add local query to geocoder
+    this.map.addControl(this.geocoder);
+
+    this.markers = new Map(data.map((dataPoint) => {
       const longLat = (dataPoint[K.LONG] !== undefined && dataPoint[K.LAT] !== undefined)
         ? [dataPoint[K.LONG], dataPoint[K.LAT]]
         : [0, 0];
@@ -67,12 +148,12 @@ export default class Mapbox {
         getUniqueID(dataPoint),
         [
           new mapboxgl.Marker({
-            color: COLORS[dataPoint[K.CAT]],
+            color: COLORS(dataPoint[K.CAT]),
             scale: 0.5,
           })
             .setLngLat(longLat)
             .setPopup(
-              new mapboxgl.Popup({ offset: 20 })
+              new mapboxgl.Popup({ offset: 20, closeOnClick: true, closeOnMove: false })
                 .setHTML(descriptionGenerator(dataPoint)),
             )
             .addTo(this.map),
@@ -85,11 +166,12 @@ export default class Mapbox {
     this.markers.forEach(([marker, dataPoint], _) => {
       const el = marker.getElement();
       el.addEventListener('click', () => {
+        if (!marker.getPopup().isOpen()) marker.togglePopup();
         this.store.dispatch(Act.setSelected(dataPoint));
         this.globalUpdate();
       });
-      el.addEventListener('mouseenter', () => marker.togglePopup());
-      el.addEventListener('mouseleave', () => marker.togglePopup());
+      el.addEventListener('mouseenter', () => { if (!marker.getPopup().isOpen()) marker.togglePopup(); });
+      el.addEventListener('mouseleave', () => { if (Sel.getSelectedUniqueID(this.store.getState()) !== getUniqueID(dataPoint)) marker.togglePopup(); });
     });
   }
 
@@ -140,7 +222,7 @@ export default class Mapbox {
       marker.togglePopup();
 
       // add buffer
-      this.showBuffer(coordinates);
+      this.showBuffer(Sel.getBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
 
       // zoom to point
       this.map.flyTo({
@@ -152,10 +234,12 @@ export default class Mapbox {
     }
   }
 
-  showBuffer(coords) {
-    const point = turf.point(coords);
+  showBuffer(radius = 1) {
+    // need to pull so we can update locally with expanding buffer rather than re-draw
+    const selected = Sel.getSelected(this.store.getState());
+    const point = turfPoint([selected[K.LONG], selected[K.LAT]]);
     // create buffer
-    const buffered = buffer(point, 1, { units: 'miles', steps: 16 });
+    const buffered = circle(point, radius, { units: 'miles', steps: 48 });
     this.map.getSource(this.BUFFER).setData(buffered);
   }
 
@@ -179,13 +263,19 @@ export default class Mapbox {
     }
   }
 
+  toggleVisibility(status) {
+    // map over markers and turn off / on according to toggle
+    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatCatgStatus(data)]));
+  }
+
   draw() {
     this.selectPoint(Sel.getSelected(this.store.getState()));
     this.colorMarkers(Sel.getInBuffer(this.store.getState()));
+    this.toggleVisibility(Sel.getToggleStatus(this.store.getState()));
   }
 
   fitBounds(geojsonData) {
-    const bbox = turf.bbox(geojsonData);
+    const bbox = turfBbox(geojsonData);
     this.map.fitBounds(bbox, { padding: 50 });
   }
 }

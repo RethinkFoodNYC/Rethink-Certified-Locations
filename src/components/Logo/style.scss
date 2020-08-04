@@ -1,0 +1,24 @@
+@import '../../styling/variables';
+
+$rowHeight: 55px;
+
+
+#footer {
+    font-family : $fontRegular;
+    height: $rowHeight;
+    z-index: 3;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+}
+
+.twonlogo {
+    background-image: url("../../../assets/2n-logo.png");
+    background-size: cover;
+    height: $rowHeight/2;
+    width: $rowHeight/2;
+    position: absolute;
+    right: 5px;
+    bottom: 25px;
+    z-index: 4;
+}

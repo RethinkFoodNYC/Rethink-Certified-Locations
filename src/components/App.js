@@ -6,6 +6,7 @@ import Header from './Header';
 import { STATE as S } from '../globals/constants';
 import * as Sel from '../selectors';
 import * as Act from '../actions';
+import Logo from './Logo';
 
 // initialize both components with data
 export default class App {
@@ -23,9 +24,10 @@ export default class App {
     // once a user logs in, automatically fetches data
     // once data is fetched, it passes it into the callback to initialize map
     this.googleAuth = new GoogleAuth(this.handleLogIn, this.handleLogOut);
-    this.map = new Mapbox(this.store, this.update);
     this.list = new List(this.store, this.update);
+    this.map = new Mapbox(this.store, this.update, this.list.updateRangeRadius);
     this.header = new Header();
+    this.logo = new Logo();
   }
 
   // gets called once user has logged in

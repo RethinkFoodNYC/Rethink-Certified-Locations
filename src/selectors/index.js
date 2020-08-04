@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { distance, getUniqueID } from '../globals/helpers';
+import { calculateDistance, getUniqueID, concatCatgStatus } from '../globals/helpers';
 import { KEYS as K, STATE as S } from '../globals/constants';
 
 /** Basic Selectors */
@@ -8,6 +8,7 @@ export const getData = (state) => state[S.DATA];
 export const getVisibleInList = (state) => state[S.VISIBLE_STATUS];
 export const getToggleStatus = (state) => state[S.TOGGLE_STATUS];
 export const getSelectedUniqueID = (state) => state[S.SELECTED];
+export const getBufferRadius = (state) => state[S.BUFFER_RAD];
 
 /** Data Manipulations */
 export const getFlatData = createSelector([
@@ -21,19 +22,32 @@ export const getFlatDataMap = createSelector([
 export const getSelected = createSelector([
   getSelectedUniqueID,
   getFlatDataMap,
-], (selectedID, flatDataMap) => flatDataMap.has(selectedID) ? flatDataMap.get(selectedID) : null);
+], (selectedID, flatDataMap) => (flatDataMap.has(selectedID) ? flatDataMap.get(selectedID) : null));
+
+export const getDistances = createSelector([
+  getSelectedUniqueID, getFlatDataMap, getToggleStatus,
+], (selectedID, flatDataMap, toggleStatus) => {
+  if (selectedID === null) {
+    return null;
+  }
+  const selected = flatDataMap.get(selectedID);
+  return new Map([...flatDataMap]
+    .filter(([, d]) => toggleStatus[concatCatgStatus(d)])
+    .map(([uniqueID, d]) => {
+      const dist = calculateDistance(
+        [selected[K.LONG], selected[K.LAT]],
+        [d[K.LONG], d[K.LAT]],
+      );
+      return [uniqueID, dist];
+    }));
+});
 
 export const getInBuffer = createSelector([
-  getFlatDataMap,
-  getSelectedUniqueID,
-], (flatDataMap, selectedID) => {
-  if (flatDataMap.has(selectedID)) {
-    const selected = flatDataMap.get(selectedID);
-    return (Array.from(flatDataMap.values())).filter((d) => distance(
-      selected[K.LAT],
-      selected[K.LONG],
-      d[K.LAT],
-      d[K.LONG],
-    ) < 1).map((d) => getUniqueID(d));
-  } else return [];
+  getDistances, getBufferRadius,
+], (distanceMap, radius) => {
+  if (distanceMap === null) {
+    return [];
+  }
+  return [...distanceMap.entries()]
+    .filter(([, dist]) => dist < radius).map(([uniqueID]) => uniqueID);
 });
