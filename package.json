@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "parcel index.html",
     "prebuild": "rm -rf docs",
-    "build": "parcel build index.html --public-url https://two-n.github.io/rethink-map/"
+    "build": "parcel build index.html --public-url https://rethinkfoodnyc.github.io/Rethink-Certified-Locations/"
   },
   "dependencies": {
     "@turf/buffer": "^5.1.5",
