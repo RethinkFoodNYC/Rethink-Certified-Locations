@@ -12,7 +12,7 @@ import Logo from './Logo';
 export default class App {
   constructor(store) {
     this.store = store;
-    store.subscribe(() => console.log('subscriber update:', store.getState()));
+    // store.subscribe(() => console.log('subscriber update:', store.getState()));
   }
 
   init() {

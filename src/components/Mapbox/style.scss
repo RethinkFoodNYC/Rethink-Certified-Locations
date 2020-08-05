@@ -32,26 +32,31 @@
 /* Popup styling */
 
 .mapboxgl-popup {
-  padding-bottom: 5px; // floats entire popup above marker
+  padding-bottom: 2px; // floats entire popup above marker
 
-  .mapboxgl-popup-content span.header {
-    font: small-caps 200 20px $fontRegular;
-    padding: 0;
-    width: 250px;
-  }
-  
   .mapboxgl-popup-content {
-    font: 400 12px/18px $fontRegular;
-    width: 250px;
-    max-height: 100px;
-    overflow-y: scroll;
-    overflow-x: scroll;
-    overflow-wrap: break-word;
-    hyphens: auto;
     padding: 10px 25px 15px 25px;
     box-shadow: 0 0 8px .5px rgba(153, 153, 153) !important;
-  }
+    width: 250px;
+    max-height: 300px;
+    overflow: scroll;
 
+    span.header {
+      font: small-caps 200 16px $fontRegular;
+      padding: 0;
+      width: 250px;
+    }
+
+    span.name {
+      font: 400 14px/18px $fontRegular;
+    }
+
+    div.body {
+      font: 400 12px/18px $fontRegular;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+  }
 }
 
 .mapboxgl-popup-tip { // styles triangular tip
