@@ -42,12 +42,14 @@
     overflow: scroll;
 
     span.header {
+      letter-spacing: 0.5px;
       font: small-caps 200 16px $fontRegular;
       padding: 0;
       width: 250px;
     }
 
     span.name {
+      letter-spacing: 0.5px;
       font: 400 14px/18px $fontRegular;
     }
 

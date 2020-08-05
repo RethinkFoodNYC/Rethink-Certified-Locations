@@ -3,7 +3,7 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import { point as turfPoint, circle, turfBbox } from '@turf/turf';
 import { select } from 'd3';
-import { KEYS as K, COLORS } from '../../globals/constants';
+import { KEYS as K, COLORS, LONG_OFFSET } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { getUniqueID, concatCatgStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
@@ -218,11 +218,11 @@ export default class Mapbox {
     if (selected === null) {
       this.clearBuffer();
     } else {
-      const coordinates = [selected[K.LONG], selected[K.LAT]];
+      const coordinates = [(+selected[K.LONG] + LONG_OFFSET), selected[K.LAT]];
 
       // toggle popup
       const [marker] = this.markers.get(getUniqueID(selected));
-      marker.togglePopup();
+      if (!marker.getPopup().isOpen()) marker.togglePopup();
 
       // add buffer
       this.showBuffer(Sel.getBufferRadius(this.store.getState()));
