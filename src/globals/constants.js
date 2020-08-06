@@ -11,6 +11,7 @@ export const STATE = {
 };
 
 export const COLORS = scaleOrdinal().range(['#E629AF', '#E38944', '#70B0CC', '#7BD389', '#EEE777', '#4F6475', '#4C4145']);
+export const LONG_OFFSET = -0.025; // longitude offset to allow space for list
 
 export const KEYS = {
   TIME_STAMP: 'Timestamp',

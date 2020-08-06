@@ -200,6 +200,7 @@ input:checked + .slider:before {
 
 .listItem, .categoryRow {
   border-bottom: $colorDisabled 1px solid;
+  cursor: pointer;
 }
 
 .listItemDistance {
