@@ -3,7 +3,7 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import { point as turfPoint, circle, turfBbox } from '@turf/turf';
 import { select } from 'd3';
-import { KEYS as K, COLORS } from '../../globals/constants';
+import { KEYS as K, COLORS, LONG_OFFSET } from '../../globals/constants';
 import * as Sel from '../../selectors';
 import * as Act from '../../actions';
 import { getUniqueID, concatCatgStatus, convertToCarmen, calculateDistance } from '../../globals/helpers';
@@ -14,12 +14,15 @@ const emptyBufferData = { type: 'Feature', geometry: { type: 'Polygon', coordina
 
 const descriptionGenerator = (pointData) => `
   <span class="header" id="popup" className="header ${pointData[K.CAT]}" style="color:${COLORS(pointData[K.CAT])}"> <b>${(pointData[K.CAT]).toLowerCase()}</b> </span> 
-  <br> <span> <b> ${pointData[K.NAME]}</b></span> 
+  <br> <span class="name"> <b> ${pointData[K.NAME]}</b></span> 
+  <div class="body">
+       <span>${pointData[K.FADD]}</span>
   <br> <span> <b> ${[K.NUM_MEALS]}: </b>${pointData[K.NUM_MEALS]}</span>
   <br> <span> <b> ${[K.CUISINE]}: </b>${pointData[K.CUISINE]}</span>
   <br> <span> <b> Contact </b>${pointData[K.CONTACT_FN]} ${pointData[K.CONTACT_LN]}</span>
   <br> <span> <b> ${[K.CONTACT_P]}: </b>${pointData[K.CONTACT_P]}</span>
-  <br> <span> <b> ${[K.CONTACT_E]}: </b>${pointData[K.CONTACT_E]}</span>`;
+  <br> <span> <b> ${[K.CONTACT_E]}: </b><a target="_blank" href="mailto:${pointData[K.CONTACT_E]}">${pointData[K.CONTACT_E]}</a></span>
+  </div>`;
 
 export default class Mapbox {
   constructor(store, globalUpdate, updateRangeRadius) {
@@ -215,14 +218,14 @@ export default class Mapbox {
     if (selected === null) {
       this.clearBuffer();
     } else {
-      const coordinates = [selected[K.LONG], selected[K.LAT]];
+      const coordinates = [(+selected[K.LONG] + LONG_OFFSET), selected[K.LAT]];
 
       // toggle popup
-      const [marker, _] = this.markers.get(getUniqueID(selected));
-      marker.togglePopup();
+      const [marker] = this.markers.get(getUniqueID(selected));
+      if (!marker.getPopup().isOpen()) marker.togglePopup();
 
       // add buffer
-      this.showBuffer(Sel.getBufferRadius(this.store.getState())); // TODO: reset radius to 1 mi on each click
+      this.showBuffer(Sel.getBufferRadius(this.store.getState()));
 
       // zoom to point
       this.map.flyTo({
@@ -250,28 +253,34 @@ export default class Mapbox {
   colorMarkers(inBuffer) {
     // show all if there is no buffer
     if (inBuffer.length === 0) {
-      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.remove('hide'));
+      this.markers.forEach(([marker]) => marker.getElement().classList.remove('hide'));
     } else {
       // toggle off all outside of buffer
-      this.markers.forEach(([marker, data], uniqueID) => marker.getElement().classList.add('hide'));
+      this.markers.forEach(([marker]) => marker.getElement().classList.add('hide'));
 
       // color in buffer
       inBuffer.forEach((d) => {
-        const [marker, _] = this.markers.get(d);
+        const [marker] = this.markers.get(d);
         marker.getElement().classList.remove('hide');
       });
     }
   }
 
-  toggleVisibility(status) {
+  toggleVisibility(status, selectedID) {
     // map over markers and turn off / on according to toggle
-    this.markers.forEach(([marker, data]) => select(marker.getElement()).classed('off', !status[concatCatgStatus(data)]));
+    this.markers.forEach(([marker, data]) => select(marker.getElement())
+      .classed('off', !status[concatCatgStatus(data)]
+      // in case they toggle off the selected category, it still appears
+        && getUniqueID(data) !== selectedID));
   }
 
   draw() {
     this.selectPoint(Sel.getSelected(this.store.getState()));
     this.colorMarkers(Sel.getInBuffer(this.store.getState()));
-    this.toggleVisibility(Sel.getToggleStatus(this.store.getState()));
+    this.toggleVisibility(
+      Sel.getToggleStatus(this.store.getState()),
+      Sel.getSelectedUniqueID(this.store.getState()),
+    );
   }
 
   fitBounds(geojsonData) {
